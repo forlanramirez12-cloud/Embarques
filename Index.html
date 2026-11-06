@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Carga de Embarques</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f7f6; }
+h2 { color: #333; }
+.tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+.tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #ddd; font-weight: bold; border-radius: 5px; }
+.tab-btn.active { background: #007bff; color: white; }
+.panel { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.panel.active { display: block; }
+form { display: grid; gap: 15px; max-width: 400px; margin-bottom: 25px; }
+input, select, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+button { border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+.btn-submit { background: #28a745; color: white; }
+.btn-confirmar { background: #ffc107; color: #212529; padding: 6px 12px; font-size: 12px; }
+table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 30px; }
+th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+th { background-color: #007bff; color: white; }
+.th-salidas { background-color: #28a745; }
+tr:nth-child(even) { background-color: #f9f9f9; }
+.badge { background: #6c757d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+.badge-success { background: #28a745; }
+</style>
+</head>
+<body>
+
+<h2>🚚 Control de Embarques y Despacho</h2>
+
+<!-- Pestañas de Navegación -->
+<div class="tabs">
+<button class="tab-btn active" onclick="switchTab('envios')">1. Solicitar Envíos</button>
+<button class="tab-btn" onclick="switchTab('salidas')">2. Confirmar Salidas ⏱️</button>
+<button class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes</button>
+</div>
+
+<!-- PESTAÑA 1: SOLICITAR ENVÍOS -->
+<div id="panel-envios" class="panel active">
+<h3>Nueva Solicitud de Envío</h3>
+<form id="form-envio" onsubmit="registrarEnvio(event)">
+<input type="text" id="envio-delivery" placeholder="Código Delivery (Ej: DEL-101)" required>
+<select id="envio-cliente" required>
+<option value="">-- Selecciona un Cliente --</option>
+<option value="Aceros de México S.A.">Aceros de México S.A.</option>
+<option value="Logística Central">Logística Central</option>
+</select>
+<input type="number" id="envio-toneladas" step="0.1" placeholder="Toneladas (Ej: 3.5)" required>
+<label for="envio-hora"><b>Hora programada de entrega:</b></label>
+<input type="time" id="envio-hora" required>
+<textarea id="envio-comentario" placeholder="Comentarios o instrucciones especiales..."></textarea>
+<button type="submit" class="btn-submit">Cargar Envío</button>
+</form>
+
+<h3>📋 Todos los Embarques</h3>
+<table>
+<thead>
+<tr>
+<th>Delivery</th>
+<th>Cliente</th>
+<th>Toneladas</th>
+<th>Prog. Entrega</th>
+<th>Comentario</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody id="tabla-general-cuerpo">
+<!-- Aquí se listan todos con su estado -->
+</tbody>
+</table>
+</div>
+
+<!-- PESTAÑA 2: CONFIRMAR SALIDAS (NUEVA) -->
+<div id="panel-salidas" class="panel">
+<h3>Despacho de Unidades (Check-out)</h3>
+<p>Selecciona el embarque que va saliendo para registrar su estampa de tiempo.</p>
+
+<table>
+<thead>
+<tr>
+<th class="th-salidas">Delivery</th>
+<th class="th-salidas">Cliente</th>
+<th class="th-salidas">Acción</th>
+<th class="th-salidas">Fecha y Hora de Salida Real</th>
+</tr>
+</thead>
+<tbody id="tabla-salidas-cuerpo">
+<!-- Fila dinámica para confirmar salidas -->
+</tbody>
+</table>
+</div>
+
+<!-- PESTAÑA 3: ALTA DE CLIENTES -->
+<div id="panel-clientes" class="panel">
+<h3>Registrar Nuevo Cliente</h3>
+<form id="form-cliente" onsubmit="registrarCliente(event)">
+<input type="text" id="cliente-nombre" placeholder="Nombre o Razón Social del Cliente" required>
+<input type="text" id="cliente-telefono" placeholder="Teléfono de contacto">
+<button type="submit" class="btn-submit" style="background:#007bff">Guardar Cliente</button>
+</form>
+</div>
+
+<script>
+// Almacenamiento temporal de datos en memoria
+let embarques = [];
+
+function switchTab(tabName) {
+document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+document.getElementById(panel-${tabName}`).classList.add('active');
+event.target.classList.add('active');
+
+if(tabName === 'salidas' || tabName === 'envios') renderTablas();
+}
+
+function registrarCliente(e) {
+e.preventDefault();
+const nombre = document.getElementById('cliente-nombre').value;
+const selectCliente = document.getElementById('envio-cliente');
+
+const option = document.createElement('option');
+option.value = nombre;
+option.textContent = nombre;
+selectCliente.appendChild(option);
+
+alert(Cliente "${nombre}" registrado con éxito.`);
+document.getElementById('form-cliente').reset();
+switchTab('envios');
+}
+
+function registrarEnvio(e) {
+e.preventDefault();
+const delivery = document.getElementById('envio-delivery').value;
+const cliente = document.getElementById('envio-cliente').value;
+const toneladas = document.getElementById('envio-toneladas').value;
+const hora = document.getElementById('envio-hora').value;
+const comentario = document.getElementById('envio-comentario').value;
+
+// Guardamos el objeto en nuestro arreglo
+embarques.push({
+delivery: delivery,
+cliente: cliente,
+toneladas: toneladas,
+horaEntrega: hora,
+comentario: comentario,
+estado: 'En Andén',
+fechaHoraSalida: '-'
+});
+
+document.getElementById('form-envio').reset();
+renderTablas();
+alert(Delivery ${delivery} creado correctamente.`);
+}
+
+// Función para estampar la fecha y hora actual al confirmar salida
+function confirmarSalidaReal(deliveryId) {
+const ahora = new Date();
+// Formato amigable: DD/MM/AAAA HH:MM:SS
+const fechaFormateada = ahora.toLocaleDateString() + ' ' + ahora.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+const embarque = embarques.find(e => e.delivery === deliveryId);
+if (embarque) {
+embarque.estado = 'En Ruta';
+embarque.fechaHoraSalida = fechaFormateada;
+}
+renderTablas();
+}
+
+// Redibuja las tablas para mantener la información sincronizada
+function renderTablas() {
+const tGeneral = document.getElementById('tabla-general-cuerpo');
+const tSalidas = document.getElementById('tabla-salidas-cuerpo');
+
+tGeneral.innerHTML = '';
+tSalidas.innerHTML = '';
+
+embarques.forEach(emb => {
+// Rellenar Tabla General
+const badgeClass = emb.estado === 'En Ruta' ? 'badge-success' : '';
+tGeneral.innerHTML += <tr&gt; &lt;td&gt;&lt;b&gt;${emb.delivery}</b></td>
+<td>{emb.toneladas} Ton</td>
+<td>⏱️ {emb.comentario || '-'}</td>
+<td><span class="badge {emb.estado}</span></td>
+</tr>`;
+
+// Rellenar Tabla de Operación de Salidas
+const botonOTexto = emb.estado === 'En Andén'
+? <button class="btn-confirmar" onclick="confirmarSalidaReal('${emb.delivery}')">🛫 Confirmar Salida</button>:<b style="color:#28a745;">✓ Despachado</b>`;
+
+tSalidas.innerHTML += <tr&gt; &lt;td&gt;&lt;b&gt;${emb.delivery}</b></td>
+<td>{botonOTexto}</td>
+<td><b>${emb.fechaHoraSalida}</b></td>
+</tr>`;
+});
+}
+</script>
+</body>
+</html>
