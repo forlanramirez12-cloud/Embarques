@@ -1,202 +1,199 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Sistema de Carga de Embarques</title>
-<style>
-body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f7f6; }
-h2 { color: #333; }
-
-/* Estilos del Login */
-.login-container { max-width: 350px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
-.login-container h3 { margin-top: 0; color: #007bff; }
-
-/* Estilos de la App */
-#app-content { display: none; }
-.user-bar { background: #333; color: white; padding: 10px 20px; border-radius: 5px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-.btn-logout { background: #dc3545; color: white; padding: 5px 10px; border-size: 0; font-size: 12px; }
-
-.tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-.tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #ddd; font-weight: bold; border-radius: 5px; display: none; }
-.tab-btn.active { background: #007bff; color: white; }
-
-.panel { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-.panel.active { display: block; }
-form { display: grid; gap: 15px; max-width: 400px; margin-bottom: 25px; }
-input, select, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-button { border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; }
-.btn-submit { background: #28a745; color: white; }
-.btn-confirmar { background: #ffc107; color: #212529; padding: 6px 12px; font-size: 12px; }
-table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 30px; }
-th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-th { background-color: #007bff; color: white; }
-.th-salidas { background-color: #28a745; }
-tr:nth-child(even) { background-color: #f9f9f9; }
-.badge { background: #6c757d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
-.badge-success { background: #28a745; }
-</style>
+    <meta charset="UTF-8">
+    <title>Sistema de Carga de Embarques</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f7f6; }
+        h2 { color: #333; }
+        
+        /* Estilos del Login */
+        .login-container { max-width: 350px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+        .login-container h3 { margin-top: 0; color: #007bff; }
+        .login-field { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        
+        /* Estilos de la App */
+        #app-content { display: none; }
+        .user-bar { background: #333; color: white; padding: 10px 20px; border-radius: 5px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-logout { background: #dc3545; color: white; padding: 5px 10px; border: 0; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+        
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #ddd; font-weight: bold; border-radius: 5px; display: none; }
+        .tab-btn.active { background: #007bff; color: white; }
+        
+        .panel { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .panel.active { display: block; }
+        .app-form { display: grid; gap: 15px; max-width: 400px; margin-bottom: 25px; }
+        input, select, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        button { border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+        .btn-submit { background: #28a745; color: white; }
+        .btn-confirmar { background: #ffc107; color: #212529; padding: 6px 12px; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 30px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        .th-salidas { background-color: #28a745; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .badge { background: #6c757d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+        .badge-success { background: #28a745; }
+    </style>
 </head>
 <body>
 
-<!-- PANTALLA DE INICIO DE SESIÓN -->
-<div id="login-screen" class="login-container">
-<h3>🔒 Ingreso al Sistema</h3>
-<form onsubmit="login(event)" style="margin-bottom:0;">
-<select id="login-usuario" required style="width:100%;">
-<option value="">-- Selecciona tu Cuenta --</option>
-<option value="oficina">Oficina (Solicitudes y Clientes)</option>
-<option value="salidas">Salidas (Solo Confirmación)</option>
-</select>
-<input type="password" id="login-password" placeholder="Contraseña" required>
-<button type="submit" class="btn-submit" style="background:#007bff; width:100%;">Ingresar</button>
-</form>
-</div>
+    <!-- PANTALLA DE INICIO DE SESIÓN -->
+    <div id="login-screen" class="login-container">
+        <h3>🔒 Ingreso al Sistema</h3>
+        <select id="login-usuario" class="login-field">
+            <option value="">-- Selecciona tu Cuenta --</option>
+            <option value="oficina">Oficina (Solicitudes y Clientes)</option>
+            <option value="salidas">Salidas (Solo Confirmación)</option>
+        </select>
+        <input type="password" id="login-password" class="login-field" placeholder="Contraseña">
+        <button type="button" onclick="ejecutarLogin()" class="btn-submit" style="background:#007bff; width:100%;">Ingresar</button>
+    </div>
 
-<!-- CONTENIDO PRINCIPAL DE LA APLICACIÓN -->
-<div id="app-content">
-<div class="user-bar">
-<span>Sesión activa: <b id="user-display"></b></span>
-<button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
-</div>
+    <!-- CONTENIDO PRINCIPAL DE LA APLICACIÓN -->
+    <div id="app-content">
+        <div class="user-bar">
+            <span>Sesión activa: <b id="user-display"></b></span>
+            <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+        </div>
+        
+        <h2>🚚 Control de Embarques y Despacho</h2>
+        
+        <!-- Pestañas de Navegación -->
+        <div class="tabs">
+            <button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitar Envíos</button>
+            <button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">2. Confirmar Salidas ⏱️</button>
+            <button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes</button>
+        </div>
 
-<h2>🚚 Control de Embarques y Despacho</h2>
+        <!-- PESTAÑA 1: SOLICITAR ENVÍOS -->
+        <div id="panel-envios" class="panel">
+            <h3>Nueva Solicitud de Envío</h3>
+            <form id="form-envio" class="app-form" onsubmit="registrarEnvio(event)">
+                <input type="text" id="envio-delivery" placeholder="Código Delivery (Ej: DEL-101)" required>
+                <select id="envio-cliente" required>
+                    <option value="">-- Selecciona un Cliente --</option>
+                    <option value="Aceros de México S.A.">Aceros de México S.A.</option>
+                    <option value="Logística Central">Logística Central</option>
+                </select>
+                <input type="number" id="envio-toneladas" step="0.1" placeholder="Toneladas (Ej: 3.5)" required>
+                <label for="envio-hora"><b>Hora programada de entrega:</b></label>
+                <input type="time" id="envio-hora" required>
+                <textarea id="envio-comentario" placeholder="Comentarios o instrucciones especiales..."></textarea>
+                <button type="submit" class="btn-submit">Cargar Envío</button>
+            </form>
 
-<!-- Pestañas de Navegación -->
-<div class="tabs">
-<button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitar Envíos</button>
-<button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">2. Confirmar Salidas ⏱️</button>
-<button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes</button>
-</div>
+            <h3>📋 Todos los Embarques</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Delivery</th>
+                        <th>Cliente</th>
+                        <th>Toneladas</th>
+                        <th>Prog. Entrega</th>
+                        <th>Comentario</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-general-cuerpo"></tbody>
+            </table>
+        </div>
 
-<!-- PESTAÑA 1: SOLICITAR ENVÍOS -->
-<div id="panel-envios" class="panel">
-<h3>Nueva Solicitud de Envío</h3>
-<form id="form-envio" onsubmit="registrarEnvio(event)">
-<input type="text" id="envio-delivery" placeholder="Código Delivery (Ej: DEL-101)" required>
-<select id="envio-cliente" required>
-<option value="">-- Selecciona un Cliente --</option>
-<option value="Aceros de México S.A.">Aceros de México S.A.</option>
-<option value="Logística Central">Logística Central</option>
-</select>
-<input type="number" id="envio-toneladas" step="0.1" placeholder="Toneladas (Ej: 3.5)" required>
-<label for="envio-hora"><b>Hora programada de entrega:</b></label>
-<input type="time" id="envio-hora" required>
-<textarea id="envio-comentario" placeholder="Comentarios o instrucciones especiales..."></textarea>
-<button type="submit" class="btn-submit">Cargar Envío</button>
-</form>
+        <!-- PESTAÑA 2: CONFIRMAR SALIDAS -->
+        <div id="panel-salidas" class="panel">
+            <h3>Despacho de Unidades (Check-out)</h3>
+            <p>Selecciona el embarque que va saliendo para registrar su estampa de tiempo.</p>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th class="th-salidas">Delivery</th>
+                        <th class="th-salidas">Cliente</th>
+                        <th class="th-salidas">Acción</th>
+                        <th class="th-salidas">Fecha y Hora de Salida Real</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-salidas-cuerpo"></tbody>
+            </table>
+        </div>
 
-<h3>📋 Todos los Embarques</h3>
-<table>
-<thead>
-<tr>
-<th>Delivery</th>
-<th>Cliente</th>
-<th>Toneladas</th>
-<th>Prog. Entrega</th>
-<th>Comentario</th>
-<th>Estado</th>
-</tr>
-</thead>
-<tbody id="tabla-general-cuerpo"></tbody>
-</table>
-</div>
+        <!-- PESTAÑA 3: ALTA DE CLIENTES -->
+        <div id="panel-clientes" class="panel">
+            <h3>Registrar Nuevo Cliente</h3>
+            <form id="form-cliente" class="app-form" onsubmit="registrarCliente(event)">
+                <input type="text" id="cliente-nombre" placeholder="Nombre o Razón Social del Cliente" required>
+                <input type="text" id="cliente-telefono" placeholder="Teléfono de contacto">
+                <button type="submit" class="btn-submit" style="background:#007bff">Guardar Cliente</button>
+            </form>
+        </div>
+    </div>
 
-<!-- PESTAÑA 2: CONFIRMAR SALIDAS -->
-<div id="panel-salidas" class="panel">
-<h3>Despacho de Unidades (Check-out)</h3>
-<p>Selecciona el embarque que va saliendo para registrar su estampa de tiempo.</p>
+    <script>
+        let embarques = [];
+        let usuarioActual = '';
 
-<table>
-<thead>
-<tr>
-<th class="th-salidas">Delivery</th>
-<th class="th-salidas">Cliente</th>
-<th class="th-salidas">Acción</th>
-<th class="th-salidas">Fecha y Hora de Salida Real</th>
-</tr>
-</thead>
-<tbody id="tabla-salidas-cuerpo"></tbody>
-</table>
-</div>
+        // Función corregida para el Login
+        function ejecutarLogin() {
+            const usuario = document.getElementById('login-usuario').value;
+            const pass = document.getElementById('login-password').value;
 
-<!-- PESTAÑA 3: ALTA DE CLIENTES -->
-<div id="panel-clientes" class="panel">
-<h3>Registrar Nuevo Cliente</h3>
-<form id="form-cliente" onsubmit="registrarCliente(event)">
-<input type="text" id="cliente-nombre" placeholder="Nombre o Razón Social del Cliente" required>
-<input type="text" id="cliente-telefono" placeholder="Teléfono de contacto">
-<button type="submit" class="btn-submit" style="background:#007bff">Guardar Cliente</button>
-</form>
-</div>
-</div>
+            if (!usuario) {
+                alert('Por favor, selecciona un tipo de cuenta.');
+                return;
+            }
 
-<script>
-let embarques = [];
-let usuarioActual = '';
+            if (usuario === 'oficina' && pass === 'oficina123') {
+                usuarioActual = 'Oficina';
+                configurarPermisos('oficina');
+            } else if (usuario === 'salidas' && pass === 'salidas123') {
+                usuarioActual = 'Salidas / Guardias';
+                configurarPermisos('salidas');
+            } else {
+                alert('Contraseña incorrecta. Inténtalo de nuevo.');
+                return;
+            }
 
-// Función para validar login
-function login(e) {
-e.preventDefault();
-const usuario = document.getElementById('login-usuario').value;
-const pass = document.getElementById('login-password').value;
+            // Ocultar login y mostrar aplicación
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            document.getElementById('user-display').textContent = usuarioActual;
+            document.getElementById('login-password').value = '';
+        }
 
-if (usuario === 'oficina' && pass === 'oficina123') {
-usuarioActual = 'Oficina';
-configurarPermisos('oficina');
-} else if (usuario === 'salidas' && pass === 'salidas123') {
-usuarioActual = 'Salidas / Guardias';
-configurarPermisos('salidas');
-} else {
-alert('Contraseña incorrecta. Inténtalo de nuevo.');
-return;
-}
+        // Configurar permisos de vistas
+        function configurarPermisos(perfil) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.style.display = 'none');
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-document.getElementById('login-screen').style.display = 'none';
-document.getElementById('app-content').style.display = 'block';
-document.getElementById('user-display').textContent = usuarioActual;
-document.getElementById('login-password').value = '';
-}
+            if (perfil === 'oficina') {
+                document.getElementById('btn-tab-envios').style.display = 'block';
+                document.getElementById('btn-tab-clientes').style.display = 'block';
+                switchTab('envios');
+            } else if (perfil === 'salidas') {
+                document.getElementById('btn-tab-salidas').style.display = 'block';
+                switchTab('salidas');
+            }
+        }
 
-// Configurar qué pestañas ve cada cuenta
-function configurarPermisos(perfil) {
-// Ocultar todo primero
-document.querySelectorAll('.tab-btn').forEach(b => b.style.display = 'none');
-document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        function logout() {
+            document.getElementById('app-content').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            document.getElementById('login-usuario').value = '';
+        }
 
-if (perfil === 'oficina') {
-document.getElementById('btn-tab-envios').style.display = 'block';
-document.getElementById('btn-tab-clientes').style.display = 'block';
-switchTab('envios');
-} else if (perfil === 'salidas') {
-document.getElementById('btn-tab-salidas').style.display = 'block';
-switchTab('salidas');
-}
-}
+        function switchTab(tabName) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(`panel-${tabName}`).classList.add('active');
+            const botonActivo = document.getElementById(`btn-tab-${tabName}`);
+            if(botonActivo) botonActivo.classList.add('active');
+            
+            if(tabName === 'salidas' || tabName === 'envios') renderTablas();
+        }
 
-function logout() {
-document.getElementById('app-content').style.display = 'none';
-document.getElementById('login-screen').style.display = 'block';
-}
-
-function switchTab(tabName) {
-document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-document.getElementById(panel-${tabName}).classList.add('active'); const botonActivo = document.getElementById(btn-tab-${tabName});
-if(botonActivo) botonActivo.classList.add('active');
-
-if(tabName === 'salidas' || tabName === 'envios') renderTablas();
-}
-
-function registrarCliente(e) {
-e.preventDefault();
-const nombre = document.getElementById('cliente-nombre').value;
-const selectCliente = document.getElementById('envio-cliente');
-
-const option = document.createElement('option');
-option.value = nombre;
-option.textContent = nombre;
-selectCliente.appendChild(option);
-
-alert(Cliente "${nombre}" registrado.);
+        function registrarCliente(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('cliente-nombre').value;
