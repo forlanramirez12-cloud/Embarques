@@ -52,103 +52,103 @@ th { background-color: #007bff; color: white; }
 
 <!-- PANTALLA DE INICIO DE SESIÓN -->
 <div id="login-screen" class="login-container">
-<h3>🔒 Ingreso al Sistema</h3>
-<select id="login-usuario" class="login-field">
-<option value="">-- Selecciona tu Cuenta --</option>
-<option value="oficina">Oficina (Solicitudes y Clientes)</option>
-<option value="salidas">Salidas (Solo Confirmación)</option>
-</select>
-<div class="password-wrapper">
-<input type="password" id="login-password" class="login-field" placeholder="Contraseña">
-<span class="toggle-password" onclick="alternarPassword()">👁️</span>
-</div>
-<button type="button" onclick="ejecutarLogin()" class="btn-submit" style="background:#007bff; width:100%; margin-top: 10px;">Ingresar</button>
+  <h3>🔒 Ingreso al Sistema</h3>
+  <select id="login-usuario" class="login-field">
+    <option value="">-- Selecciona tu Cuenta --</option>
+    <option value="oficina">Oficina (Solicitudes y Clientes)</option>
+    <option value="salidas">Salidas (Solo Confirmación)</option>
+  </select>
+  <div class="password-wrapper">
+    <input type="password" id="login-password" class="login-field" placeholder="Contraseña">
+    <span class="toggle-password" id="icono-ojo" onclick="alternarPassword()">👁️</span>
+  </div>
+  <button type="button" onclick="ejecutarLogin()" class="btn-submit" style="background:#007bff; width:100%; margin-top: 10px;">Ingresar</button>
 </div>
 
 <!-- CONTENIDO PRINCIPAL DE LA APLICACIÓN -->
 <div id="app-content">
-<div class="user-bar">
-<span>Sesión: <b id="user-display"></b></span>
-<button class="btn-logout" onclick="logout()">Salir</button>
-</div>
+  <div class="user-bar">
+    <span>Sesión: <b id="user-display"></b></span>
+    <button class="btn-logout" onclick="logout()">Salir</button>
+  </div>
 
-<h2>🚚 Control de Embarques - POSCO MPPC SLP</h2>
+  <h2>🚚 Control de Embarques - POSCO MPPC SLP</h2>
 
-<div class="tabs">
-<button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitar Envíos</button>
-<button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">2. Confirmar Salidas ⏱️</button>
-<button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes</button>
-</div>
+  <div class="tabs">
+    <button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitar Envíos</button>
+    <button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">2. Confirmar Salidas ⏱️</button>
+    <button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes</button>
+  </div>
 
-<!-- PESTAÑA 1: SOLICITAR ENVÍOS -->
-<div id="panel-envios" class="panel">
-<h3>Nueva Solicitud de Envío</h3>
-<form id="form-envio" class="app-form" onsubmit="registrarEnvio(event)">
-<input type="text" id="envio-delivery" placeholder="Código Delivery (Ej: DEL-101)" required>
+  <!-- PESTAÑA 1: SOLICITAR ENVÍOS -->
+  <div id="panel-envios" class="panel">
+    <h3>Nueva Solicitud de Envío</h3>
+    <form id="form-envio" class="app-form" onsubmit="registrarEnvio(event)">
+      <input type="text" id="envio-delivery" placeholder="Código Delivery (Ej: DEL-101)" required>
 
-<select id="envio-cliente" required>
-<option value="">-- Selecciona un Cliente --</option>
-<option value="Aceros de México S.A.|1.5">Aceros de México S.A. (Trayecto: 1.5 hrs)</option>
-<option value="Mabe Saltillo|3.5">Mabe Saltillo (Trayecto: 3.5 hrs)</option>
-</select>
+      <select id="envio-cliente" required>
+        <option value="">-- Selecciona un Cliente --</option>
+        <option value="Aceros de México S.A.|1.5">Aceros de México S.A. (Trayecto: 1.5 hrs)</option>
+        <option value="Mabe Saltillo|3.5">Mabe Saltillo (Trayecto: 3.5 hrs)</option>
+      </select>
 
-<input type="number" id="envio-toneladas" step="0.1" placeholder="Toneladas" required>
+      <input type="number" id="envio-toneladas" step="0.1" placeholder="Toneladas" required>
 
-<label for="envio-hora"><b>Hora requerida de Entrega con Cliente:</b></label>
-<input type="time" id="envio-hora" required>
+      <label for="envio-hora"><b>Hora requerida de Entrega con Cliente:</b></label>
+      <input type="time" id="envio-hora" required>
 
-<label for="envio-estado-inicial"><b>Estado Inicial en Patio:</b></label>
-<select id="envio-estado-inicial" required>
-<option value="Pendiente">Pendiente de Carga</option>
-<option value="En Carga">Ya está en Andén (En carga)</option>
-</select>
+      <label for="envio-estado-inicial"><b>Estado Inicial en Patio:</b></label>
+      <select id="envio-estado-inicial" required>
+        <option value="Pendiente">Pendiente de Carga</option>
+        <option value="En Carga">Ya está en Andén (En carga)</option>
+      </select>
 
-<textarea id="envio-comentario" placeholder="Comentarios adicionales..."></textarea>
-<button type="submit" class="btn-submit">Cargar Envío</button>
-</form>
+      <textarea id="envio-comentario" placeholder="Comentarios adicionales..."></textarea>
+      <button type="submit" class="btn-submit">Cargar Envío</button>
+    </form>
 
-<h3>📋 Todos los Embarques</h3>
-<table>
-<thead>
-<tr>
-<th>Delivery</th>
-<th>Cliente</th>
-<th>Toneladas</th>
-<th>Entrega Solicitada</th>
-<th>Prioridad Calculada</th>
-</tr>
-</thead>
-<tbody id="tabla-general-cuerpo"></tbody>
-</table>
-</div>
+    <h3>📋 Todos los Embarques</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Delivery</th>
+          <th>Cliente</th>
+          <th>Toneladas</th>
+          <th>Entrega Solicitada</th>
+          <th>Prioridad Calculada</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-general-cuerpo"></tbody>
+    </table>
+  </div>
 
-<!-- PESTAÑA 2: CONFIRMAR SALIDAS -->
-<div id="panel-salidas" class="panel">
-<h3>Despacho de Unidades (Check-out)</h3>
-<p>Semáforo automatizado en tiempo real considerando la hora de entrega menos las horas de trayecto desde POSCO SLP.</p>
-<table>
-<thead>
-<tr>
-<th class="th-salidas">Delivery</th>
-<th class="th-salidas">Cliente</th>
-<th class="th-salidas">Semáforo de Patio</th>
-<th class="th-salidas">Acción</th>
-<th class="th-salidas">Fecha y Hora de Salida Real</th>
-</tr>
-</thead>
-<tbody id="tabla-salidas-cuerpo"></tbody>
-</table>
-</div>
+  <!-- PESTAÑA 2: CONFIRMAR SALIDAS -->
+  <div id="panel-salidas" class="panel">
+    <h3>Despacho de Unidades (Check-out)</h3>
+    <p>Semáforo automatizado en tiempo real considerando la hora de entrega menos las horas de trayecto desde POSCO SLP.</p>
+    <table>
+      <thead>
+        <tr>
+          <th class="th-salidas">Delivery</th>
+          <th class="th-salidas">Cliente</th>
+          <th class="th-salidas">Semáforo de Patio</th>
+          <th class="th-salidas">Acción</th>
+          <th class="th-salidas">Fecha y Hora de Salida Real</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-salidas-cuerpo"></tbody>
+    </table>
+  </div>
 
-<!-- PESTAÑA 3: ALTA DE CLIENTES -->
-<div id="panel-clientes" class="panel">
-<h3>Registrar Nuevo Cliente</h3>
-<form id="form-cliente" class="app-form" onsubmit="registrarCliente(event)">
-<input type="text" id="cliente-nombre" placeholder="Nombre del Cliente" required>
-<input type="number" id="cliente-trayecto" step="0.1" placeholder="Horas estimadas de trayecto desde POSCO SLP (Ej: 2.5)" required>
-<button type="submit" class="btn-submit" style="background:#007bff">Guardar Cliente</button>
-</form>
-</div>
+  <!-- PESTAÑA 3: ALTA DE CLIENTES -->
+  <div id="panel-clientes" class="panel">
+    <h3>Registrar Nuevo Cliente</h3>
+    <form id="form-cliente" class="app-form" onsubmit="registrarCliente(event)">
+      <input type="text" id="cliente-nombre" placeholder="Nombre del Cliente" required>
+      <input type="number" id="cliente-trayecto" step="0.1" placeholder="Horas estimadas de trayecto desde POSCO SLP (Ej: 2.5)" required>
+      <button type="submit" class="btn-submit" style="background:#007bff">Guardar Cliente</button>
+    </form>
+  </div>
 </div>
 
 <script>
@@ -156,35 +156,166 @@ let embarques = [];
 let usuarioActual = '';
 
 function alternarPassword() {
-const passInput = document.getElementById('login-password');
-const elOjo = document.querySelector('.toggle-password');
-if (passInput.type === 'password') {
-passInput.type = 'text';
-elOjo.textContent = '🙈';
-} else {
-passInput.type = 'password';
-elOjo.textContent = '👁️';
-}
+  const passInput = document.getElementById('login-password');
+  const elOjo = document.getElementById('icono-ojo');
+  if (passInput.type === 'password') {
+    passInput.type = 'text';
+    elOjo.textContent = '🙈';
+  } else {
+    passInput.type = 'password';
+    elOjo.textContent = '👁️';
+  }
 }
 
 function ejecutarLogin() {
-const usuario = document.getElementById('login-usuario').value;
-const pass = document.getElementById('login-password').value;
-if (!usuario) { alert('Por favor, selecciona una cuenta.'); return; }
+  const usuario = document.getElementById('login-usuario').value;
+  const pass = document.getElementById('login-password').value;
+  
+  if (!usuario) {
+    alert('Por favor, selecciona una cuenta.');
+    return;
+  }
 
-if (usuario === 'oficina' && pass === 'oficina123') {
-usuarioActual = 'Oficina';
-configurarPermisos('oficina');
-} else if (usuario === 'salidas' && pass === 'salidas123') {
-usuarioActual = 'Salidas';
-configurarPermisos('salidas');
-} else {
-alert('Contraseña incorrecta.');
-return;
-}
-document.getElementById('login-screen').style.display = 'none';
-document.getElementById('app-content').style.display = 'block';
-document.getElementById('user-display').textContent = usuarioActual;
+  if (usuario === 'oficina' && pass === 'oficina123') {
+    usuarioActual = 'Oficina';
+    configurarPermisos('oficina');
+  } else if (usuario === 'salidas' && pass === 'salidas123') {
+    usuarioActual = 'Salidas';
+    configurarPermisos('salidas');
+  } else {
+    alert('Contraseña incorrecta.');
+    return;
+  }
+
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app-content').style.display = 'block';
+  document.getElementById('user-display').textContent = usuarioActual;
 }
 
 function configurarPermisos(perfil) {
+  const btnEnvios = document.getElementById('btn-tab-envios');
+  const btnSalidas = document.getElementById('btn-tab-salidas');
+  const btnClientes = document.getElementById('btn-tab-clientes');
+
+  if (perfil === 'oficina') {
+    btnEnvios.style.display = 'inline-block';
+    btnSalidas.style.display = 'inline-block';
+    btnClientes.style.display = 'inline-block';
+    switchTab('envios');
+  } else if (perfil === 'salidas') {
+    btnEnvios.style.display = 'none';
+    btnClientes.style.display = 'none';
+    btnSalidas.style.display = 'inline-block';
+    switchTab('salidas');
+  }
+}
+
+function switchTab(tabId) {
+  const panels = document.querySelectorAll('.panel');
+  panels.forEach(p => p.classList.remove('active'));
+
+  const buttons = document.querySelectorAll('.tab-btn');
+  buttons.forEach(b => b.classList.remove('active'));
+
+  const panelActivo = document.getElementById('panel-' + tabId);
+  const botonActivo = document.getElementById('btn-tab-' + tabId);
+
+  if (panelActivo) panelActivo.classList.add('active');
+  if (botonActivo) botonActivo.classList.add('active');
+}
+
+function registrarEnvio(e) {
+  e.preventDefault();
+  const delivery = document.getElementById('envio-delivery').value;
+  const clienteData = document.getElementById('envio-cliente').value.split('|');
+  const toneladas = document.getElementById('envio-toneladas').value;
+  const hora = document.getElementById('envio-hora').value;
+  const estado = document.getElementById('envio-estado-inicial').value;
+
+  const nuevoEnvio = {
+    delivery,
+    cliente: clienteData[0],
+    trayecto: parseFloat(clienteData[1]),
+    toneladas,
+    horaEntrega: hora,
+    estado,
+    salidaReal: null
+  };
+
+  embarques.push(nuevoEnvio);
+  document.getElementById('form-envio').reset();
+  renderizarTablas();
+  alert('Envío registrado con éxito.');
+}
+
+function registrarCliente(e) {
+  e.preventDefault();
+  const nombre = document.getElementById('cliente-nombre').value;
+  const trayecto = document.getElementById('cliente-trayecto').value;
+
+  const selectCliente = document.getElementById('envio-cliente');
+  const option = document.createElement('option');
+  option.value = `${nombre}|${trayecto}`;
+  option.textContent = `${nombre} (Trayecto: ${trayecto} hrs)`;
+  selectCliente.appendChild(option);
+
+  document.getElementById('form-cliente').reset();
+  alert('Cliente agregado al catálogo.');
+  switchTab('envios');
+}
+
+function confirmarSalida(index) {
+  const ahora = new Date();
+  const horaStr = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  embarques[index].salidaReal = horaStr;
+  embarques[index].estado = 'Completado';
+  renderizarTablas();
+}
+
+function renderizarTablas() {
+  const tbodyGeneral = document.getElementById('tabla-general-cuerpo');
+  const tbodySalidas = document.getElementById('tabla-salidas-cuerpo');
+
+  tbodyGeneral.innerHTML = '';
+  tbodySalidas.innerHTML = '';
+
+  embarques.forEach((item, index) => {
+    // Fila tabla general
+    const trGen = document.createElement('tr');
+    trGen.innerHTML = `
+      <td><b>${item.delivery}</b></td>
+      <td>${item.cliente}</td>
+      <td>${item.toneladas} Tn</td>
+      <td>${item.horaEntrega}</td>
+      <td><span class="badge ${item.salidaReal ? 'semaforo-verde' : 'semaforo-amarillo'}">${item.estado}</span></td>
+    `;
+    tbodyGeneral.appendChild(trGen);
+
+    // Fila tabla salidas
+    const trSal = document.createElement('tr');
+    const claseSemaforo = item.salidaReal ? 'semaforo-verde' : 'semaforo-amarillo';
+    const estadoTexto = item.salidaReal ? 'Despachado' : 'Listo para salida';
+
+    trSal.innerHTML = `
+      <td><b>${item.delivery}</b></td>
+      <td>${item.cliente}</td>
+      <td class="${claseSemaforo}">${estadoTexto}</td>
+      <td>
+        ${!item.salidaReal ? `<button class="btn-confirmar" onclick="confirmarSalida(${index})">Confirmar Salida</button>` : '—'}
+      </td>
+      <td>${item.salidaReal ? item.salidaReal : 'En espera'}</td>
+    `;
+    tbodySalidas.appendChild(trSal);
+  });
+}
+
+function logout() {
+  usuarioActual = '';
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('app-content').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'block';
+}
+</script>
+</body>
+</html>
