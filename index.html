@@ -2,44 +2,50 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sistema de Carga de Embarques</title>
 <style>
-body { font-family: Arial, sans-serif; margin: 30px; background-color: #f4f7f6; }
+body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f7f6; }
 h2 { color: #333; }
 
 /* Estilos del Login */
-.login-container { max-width: 350px; margin: 80px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
+.login-container { max-width: 340px; margin: 60px auto; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; }
 .login-container h3 { margin-top: 0; color: #007bff; }
-.login-field { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+.login-field { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
 
-/* Contenedor especial para el campo de contraseña y el ojo */
-.password-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
-.password-wrapper input { width: 100%; padding: 10px 40px 10px 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
-.toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; padding: 0; }
+.password-wrapper { position: relative; width: 100%; }
+.password-wrapper input { width: 100%; padding-right: 45px; box-sizing: border-box; }
+.toggle-password { position: absolute; right: 12px; top: 12px; cursor: pointer; font-size: 18px; user-select: none; }
 
 /* Estilos de la App */
 #app-content { display: none; }
-.user-bar { background: #333; color: white; padding: 10px 20px; border-radius: 5px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-.btn-logout { background: #dc3545; color: white; padding: 5px 10px; border: 0; font-size: 12px; font-weight: bold; border-radius: 4px; cursor: pointer; }
+.user-bar { background: #333; color: white; padding: 10px 15px; border-radius: 5px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+.btn-logout { background: #dc3545; color: white; padding: 6px 12px; border: 0; font-weight: bold; border-radius: 4px; cursor: pointer; }
 
-.tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-.tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #ddd; font-weight: bold; border-radius: 5px; display: none; }
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; }
+.tab-btn { padding: 12px 16px; cursor: pointer; border: none; background: #ddd; font-weight: bold; border-radius: 5px; display: none; white-space: nowrap; }
 .tab-btn.active { background: #007bff; color: white; }
 
 .panel { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 .panel.active { display: block; }
 .app-form { display: grid; gap: 15px; max-width: 400px; margin-bottom: 25px; }
-input, select, textarea { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
-button { border: none; padding: 10px; cursor: pointer; font-weight: bold; border-radius: 4px; }
-.btn-submit { background: #28a745; color: white; }
-.btn-confirmar { background: #ffc107; color: #212529; padding: 6px 12px; font-size: 12px; }
-table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 30px; }
-th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+input, select, textarea { padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+button { border: none; padding: 12px; cursor: pointer; font-weight: bold; border-radius: 4px; }
+.btn-submit { background: #28a745; color: white; font-size: 15px; }
+.btn-confirmar { background: #ffffff; color: #212529; border: 1px solid #333; padding: 6px 12px; font-size: 12px; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
 th { background-color: #007bff; color: white; }
 .th-salidas { background-color: #28a745; }
-tr:nth-child(even) { background-color: #f9f9f9; }
-.badge { background: #6c757d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 12px; }
-.badge-success { background: #28a745; }
+
+/* Código de Colores del Semáforo Matemático */
+.semaforo-azul { background-color: #d1ecf1 !important; color: #0c5460; font-weight: bold; }
+.semaforo-verde { background-color: #d4edda !important; color: #155724; font-weight: bold; }
+.semaforo-amarillo { background-color: #fff3cd !important; color: #856404; font-weight: bold; }
+.semaforo-rojo { background-color: #f8d7da !important; color: #721c24; font-weight: bold; }
+
+.badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; text-transform: uppercase; }
 </style>
 </head>
 <body>
@@ -52,26 +58,22 @@ tr:nth-child(even) { background-color: #f9f9f9; }
 <option value="oficina">Oficina (Solicitudes y Clientes)</option>
 <option value="salidas">Salidas (Solo Confirmación)</option>
 </select>
-
-<!-- Campo de Contraseña con el Ojito -->
 <div class="password-wrapper">
-<input type="password" id="login-password" placeholder="Contraseña">
-<button type="button" class="toggle-password" onclick="alternarPassword()">👁️</button>
+<input type="password" id="login-password" class="login-field" placeholder="Contraseña">
+<span class="toggle-password" onclick="alternarPassword()">👁️</span>
 </div>
-
-<button type="button" onclick="ejecutarLogin()" class="btn-submit" style="background:#007bff; width:100%;">Ingresar</button>
+<button type="button" onclick="ejecutarLogin()" class="btn-submit" style="background:#007bff; width:100%; margin-top: 10px;">Ingresar</button>
 </div>
 
 <!-- CONTENIDO PRINCIPAL DE LA APLICACIÓN -->
 <div id="app-content">
 <div class="user-bar">
-<span>Sesión activa: <b id="user-display"></b></span>
-<button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+<span>Sesión: <b id="user-display"></b></span>
+<button class="btn-logout" onclick="logout()">Salir</button>
 </div>
 
-<h2>🚚 Control de Embarques y Despacho</h2>
+<h2>🚚 Control de Embarques - POSCO MPPC SLP</h2>
 
-<!-- Pestañas de Navegación -->
 <div class="tabs">
 <button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitar Envíos</button>
 <button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">2. Confirmar Salidas ⏱️</button>
@@ -83,15 +85,25 @@ tr:nth-child(even) { background-color: #f9f9f9; }
 <h3>Nueva Solicitud de Envío</h3>
 <form id="form-envio" class="app-form" onsubmit="registrarEnvio(event)">
 <input type="text" id="envio-delivery" placeholder="Código Delivery (Ej: DEL-101)" required>
+
 <select id="envio-cliente" required>
 <option value="">-- Selecciona un Cliente --</option>
-<option value="Aceros de México S.A.">Aceros de México S.A.</option>
-<option value="Logística Central">Logística Central</option>
+<option value="Aceros de México S.A.|1.5">Aceros de México S.A. (Trayecto: 1.5 hrs)</option>
+<option value="Mabe Saltillo|3.5">Mabe Saltillo (Trayecto: 3.5 hrs)</option>
 </select>
-<input type="number" id="envio-toneladas" step="0.1" placeholder="Toneladas (Ej: 3.5)" required>
-<label for="envio-hora"><b>Hora programada de entrega:</b></label>
+
+<input type="number" id="envio-toneladas" step="0.1" placeholder="Toneladas" required>
+
+<label for="envio-hora"><b>Hora requerida de Entrega con Cliente:</b></label>
 <input type="time" id="envio-hora" required>
-<textarea id="envio-comentario" placeholder="Comentarios o instrucciones especiales..."></textarea>
+
+<label for="envio-estado-inicial"><b>Estado Inicial en Patio:</b></label>
+<select id="envio-estado-inicial" required>
+<option value="Pendiente">Pendiente de Carga</option>
+<option value="En Carga">Ya está en Andén (En carga)</option>
+</select>
+
+<textarea id="envio-comentario" placeholder="Comentarios adicionales..."></textarea>
 <button type="submit" class="btn-submit">Cargar Envío</button>
 </form>
 
@@ -102,9 +114,8 @@ tr:nth-child(even) { background-color: #f9f9f9; }
 <th>Delivery</th>
 <th>Cliente</th>
 <th>Toneladas</th>
-<th>Prog. Entrega</th>
-<th>Comentario</th>
-<th>Estado</th>
+<th>Entrega Solicitada</th>
+<th>Prioridad Calculada</th>
 </tr>
 </thead>
 <tbody id="tabla-general-cuerpo"></tbody>
@@ -114,13 +125,13 @@ tr:nth-child(even) { background-color: #f9f9f9; }
 <!-- PESTAÑA 2: CONFIRMAR SALIDAS -->
 <div id="panel-salidas" class="panel">
 <h3>Despacho de Unidades (Check-out)</h3>
-<p>Selecciona el embarque que va saliendo para registrar su estampa de tiempo.</p>
-
+<p>Semáforo automatizado en tiempo real considerando la hora de entrega menos las horas de trayecto desde POSCO SLP.</p>
 <table>
 <thead>
 <tr>
 <th class="th-salidas">Delivery</th>
 <th class="th-salidas">Cliente</th>
+<th class="th-salidas">Semáforo de Patio</th>
 <th class="th-salidas">Acción</th>
 <th class="th-salidas">Fecha y Hora de Salida Real</th>
 </tr>
@@ -133,8 +144,8 @@ tr:nth-child(even) { background-color: #f9f9f9; }
 <div id="panel-clientes" class="panel">
 <h3>Registrar Nuevo Cliente</h3>
 <form id="form-cliente" class="app-form" onsubmit="registrarCliente(event)">
-<input type="text" id="cliente-nombre" placeholder="Nombre o Razón Social del Cliente" required>
-<input type="text" id="cliente-telefono" placeholder="Teléfono de contacto">
+<input type="text" id="cliente-nombre" placeholder="Nombre del Cliente" required>
+<input type="number" id="cliente-trayecto" step="0.1" placeholder="Horas estimadas de trayecto desde POSCO SLP (Ej: 2.5)" required>
 <button type="submit" class="btn-submit" style="background:#007bff">Guardar Cliente</button>
 </form>
 </div>
@@ -144,51 +155,36 @@ tr:nth-child(even) { background-color: #f9f9f9; }
 let embarques = [];
 let usuarioActual = '';
 
-// Función para mostrar / ocultar contraseña
 function alternarPassword() {
 const passInput = document.getElementById('login-password');
-const botonOjo = document.querySelector('.toggle-password');
-
+const elOjo = document.querySelector('.toggle-password');
 if (passInput.type === 'password') {
 passInput.type = 'text';
-botonOjo.textContent = '🔒'; // Cambia el icono para indicar que se puede ocultar de nuevo
+elOjo.textContent = '🙈';
 } else {
 passInput.type = 'password';
-botonOjo.textContent = '👁️';
+elOjo.textContent = '👁️';
 }
 }
 
-// Función para el Login
 function ejecutarLogin() {
 const usuario = document.getElementById('login-usuario').value;
 const pass = document.getElementById('login-password').value;
-
-if (!usuario) {
-alert('Por favor, selecciona un tipo de cuenta.');
-return;
-}
+if (!usuario) { alert('Por favor, selecciona una cuenta.'); return; }
 
 if (usuario === 'oficina' && pass === 'oficina123') {
 usuarioActual = 'Oficina';
 configurarPermisos('oficina');
 } else if (usuario === 'salidas' && pass === 'salidas123') {
-usuarioActual = 'Salidas / Guardias';
+usuarioActual = 'Salidas';
 configurarPermisos('salidas');
 } else {
-alert('Contraseña incorrecta. Inténtalo de nuevo.');
+alert('Contraseña incorrecta.');
 return;
 }
-
 document.getElementById('login-screen').style.display = 'none';
 document.getElementById('app-content').style.display = 'block';
 document.getElementById('user-display').textContent = usuarioActual;
-
-// Restablecer el campo a tipo password por seguridad al salir
-document.getElementById('login-password').type = 'password';
-document.getElementById('login-password').value = '';
-document.querySelector('.toggle-password').textContent = '👁️';
 }
 
 function configurarPermisos(perfil) {
-document.querySelectorAll('.tab-btn').forEach(b => b.style.display = 'none');
-document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
