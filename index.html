@@ -13,9 +13,21 @@ h2 { color: #333; }
 .login-container h3 { margin-top: 0; color: #007bff; }
 .login-field { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
 
-.password-wrapper { position: relative; width: 100%; }
-.password-wrapper input { width: 100%; padding-right: 45px; box-sizing: border-box; }
-.toggle-password { position: absolute; right: 12px; top: 12px; cursor: pointer; font-size: 18px; user-select: none; }
+/* Contenedor flexible del password y botón ojo */
+.password-group { display: flex; gap: 8px; margin-bottom: 15px; align-items: stretch; }
+.password-group input { margin-bottom: 0; flex: 1; min-width: 0; }
+.btn-toggle-eye { 
+  background: #e9ecef; 
+  border: 1px solid #ccc; 
+  border-radius: 4px; 
+  padding: 0 14px; 
+  font-size: 20px; 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center;
+  user-select: none;
+}
 
 /* Estilos de la App */
 #app-content { display: none; }
@@ -58,11 +70,14 @@ th { background-color: #007bff; color: white; }
     <option value="oficina">Oficina (Solicitudes y Clientes)</option>
     <option value="salidas">Salidas (Solo Confirmación)</option>
   </select>
-  <div class="password-wrapper">
+
+  <!-- Campo con botón separado para garantizar respuesta táctil -->
+  <div class="password-group">
     <input type="password" id="login-password" class="login-field" placeholder="Contraseña">
-    <span class="toggle-password" id="icono-ojo" onclick="alternarPassword()">👁️</span>
+    <button type="button" id="btn-ojo" class="btn-toggle-eye" onclick="alternarPassword()">👁️</button>
   </div>
-  <button type="button" onclick="ejecutarLogin()" class="btn-submit" style="background:#007bff; width:100%; margin-top: 10px;">Ingresar</button>
+
+  <button type="button" onclick="ejecutarLogin()" class="btn-submit" style="background:#007bff; width:100%; margin-top: 5px;">Ingresar</button>
 </div>
 
 <!-- CONTENIDO PRINCIPAL DE LA APLICACIÓN -->
@@ -157,20 +172,21 @@ let usuarioActual = '';
 
 function alternarPassword() {
   const passInput = document.getElementById('login-password');
-  const elOjo = document.getElementById('icono-ojo');
+  const btnOjo = document.getElementById('btn-ojo');
+  
   if (passInput.type === 'password') {
     passInput.type = 'text';
-    elOjo.textContent = '🙈';
+    btnOjo.textContent = '🙈';
   } else {
     passInput.type = 'password';
-    elOjo.textContent = '👁️';
+    btnOjo.textContent = '👁️';
   }
 }
 
 function ejecutarLogin() {
   const usuario = document.getElementById('login-usuario').value;
   const pass = document.getElementById('login-password').value;
-  
+
   if (!usuario) {
     alert('Por favor, selecciona una cuenta.');
     return;
