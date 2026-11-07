@@ -29,7 +29,7 @@ h2 { color: #1e3a8a; margin-top: 5px; }
 
 .panel { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
 .panel.active { display: block; }
-.app-form { display: grid; gap: 12px; max-width: 480px; margin-bottom: 25px; }
+.app-form { display: grid; gap: 12px; max-width: 520px; margin-bottom: 25px; }
 input, select, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
 button { border: none; padding: 11px; cursor: pointer; font-weight: bold; border-radius: 4px; }
 .btn-submit { background: #10b981; color: white; font-size: 15px; }
@@ -42,19 +42,36 @@ button { border: none; padding: 11px; cursor: pointer; font-weight: bold; border
 .filter-bar label { font-size: 13px; font-weight: bold; }
 .filter-bar input[type="date"] { padding: 6px 10px; font-size: 13px; }
 
+/* Buscador de mapa integrado */
+.search-container { position: relative; width: 100%; }
+.suggestions-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); list-style: none; padding: 0; margin: 0; display: none; }
+.suggestions-list li { padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
+.suggestions-list li:hover { background-color: #f8fafc; color: #0284c7; }
+
 .table-responsive { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; min-width: 820px; }
 th, td { border: 1px solid #e2e8f0; padding: 9px; text-align: left; vertical-align: middle; }
 th { background-color: #0284c7; color: white; }
 .th-salidas { background-color: #059669; }
 
-/* Semáforos personalizados */
-.semaforo-tag { padding: 5px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; text-transform: uppercase; text-align: center; }
-.semaforo-azul { background-color: #dbeafe !important; color: #1d4ed8 !important; border: 1px solid #93c5fd; }
-.semaforo-verde-azul { background-color: #ccfbf1 !important; color: #0f766e !important; border: 1px solid #5eead4; }
-.semaforo-amarillo { background-color: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d; }
-.semaforo-rojo { background-color: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fca5a5; }
-.semaforo-gris-claro { background-color: #f1f5f9 !important; color: #475569 !important; border: 1px solid #cbd5e1; }
+/* Semáforos limpios sin texto de color */
+.semaforo-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+.sem-azul { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.sem-azul .dot { background: #2563eb; }
+
+.sem-verde-azul { background: #f0fdfa; color: #0f766e; border: 1px solid #99f6e4; }
+.sem-verde-azul .dot { background: #14b8a6; }
+
+.sem-amarillo { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+.sem-amarillo .dot { background: #eab308; }
+
+.sem-rojo { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+.sem-rojo .dot { background: #ef4444; }
+
+.sem-gris { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
+.sem-gris .dot { background: #94a3b8; }
 </style>
 </head>
 <body>
@@ -84,16 +101,16 @@ th { background-color: #0284c7; color: white; }
   </div>
 
   <h2>🚚 Control y Monitoreo de Embarques</h2>
-  <div class="origin-badge">📍 Origen Fijo: POSCO MPPC SLP (Zona Industrial)</div>
+  <div class="origin-badge">📍 Origen Fijo: POSCO MPPC SLP (Zona Industrial WTC)</div>
 
   <!-- PESTAÑAS -->
   <div class="tabs">
-    <!-- Pestañas Oficina -->
+    <!-- Oficina -->
     <button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitud de Embarque</button>
     <button id="btn-tab-general" class="tab-btn" onclick="switchTab('general')">2. Historial de Carga</button>
-    <button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes</button>
+    <button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes (GPS/Ruta)</button>
     
-    <!-- Pestañas Salidas -->
+    <!-- Salidas -->
     <button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">1. Confirmación de Salida ⏱️</button>
     <button id="btn-tab-confirmadas" class="tab-btn" onclick="switchTab('confirmadas')">2. Historial de Confirmaciones 📅</button>
   </div>
@@ -105,12 +122,12 @@ th { background-color: #0284c7; color: white; }
       <label for="envio-delivery"><b>Folio Delivery:</b></label>
       <input type="text" id="envio-delivery" placeholder="Ej: DEL-5001" required>
 
-      <label for="envio-cliente"><b>Cliente y Dirección Destino:</b></label>
+      <label for="envio-cliente"><b>Cliente y Destino:</b></label>
       <select id="envio-cliente" required>
-        <option value="">-- Selecciona un Cliente --</option>
-        <option value="Mabe Saltillo|Saltillo, Coahuila|4.0">Mabe Saltillo (Destino: Saltillo, Coahuila | Trayecto: 4.0 hrs)</option>
-        <option value="Stellantis Toluca|Toluca, Edo. Méx.|4.5">Stellantis (Destino: Toluca, Edo. Méx. | Trayecto: 4.5 hrs)</option>
-        <option value="DN Automotive SLP|Villa de Reyes, SLP|0.7">DN Automotive (Destino: Villa de Reyes, SLP | Trayecto: 0.7 hrs)</option>
+        <option value="">-- Selecciona un Cliente del Catálogo --</option>
+        <option value="Mabe Saltillo|Saltillo, Coahuila|4.0">Mabe Saltillo (Destino: Saltillo | Ruta: 4.0 hrs)</option>
+        <option value="Stellantis Toluca|Toluca, Edo. Méx.|4.5">Stellantis (Destino: Toluca | Ruta: 4.5 hrs)</option>
+        <option value="DN Automotive SLP|Villa de Reyes, SLP|0.7">DN Automotive (Destino: Villa de Reyes | Ruta: 0.7 hrs)</option>
       </select>
 
       <label for="envio-toneladas"><b>Toneladas:</b></label>
@@ -123,7 +140,7 @@ th { background-color: #0284c7; color: white; }
       <input type="time" id="envio-hora" required>
 
       <label for="envio-comentario"><b>Comentarios u observaciones:</b></label>
-      <textarea id="envio-comentario" placeholder="Notas de andén o producto..."></textarea>
+      <textarea id="envio-comentario" placeholder="Detalles de carga o producto..."></textarea>
       
       <button type="submit" class="btn-submit">Programar Solicitud de Embarque</button>
     </form>
@@ -151,34 +168,39 @@ th { background-color: #0284c7; color: white; }
     </div>
   </div>
 
-  <!-- OFICINA 3: ALTA DE CLIENTES -->
+  <!-- OFICINA 3: ALTA DE CLIENTES CON BUSCADOR GPS -->
   <div id="panel-clientes" class="panel">
-    <h3>Alta de Clientes y Destinos</h3>
+    <h3>Alta de Clientes con Cálculo de Ruta (Maps / GPS)</h3>
+    <p style="font-size: 13px; color: #555;">Busca la dirección o ciudad como en Google Maps/Waze. El tiempo de viaje por carretera desde POSCO SLP se calcula automáticamente.</p>
+    
     <form id="form-cliente" class="app-form" onsubmit="registrarCliente(event)">
       <label for="cliente-nombre"><b>Nombre del Cliente / Empresa:</b></label>
       <input type="text" id="cliente-nombre" placeholder="Ej: Mabe Saltillo" required>
 
-      <label for="cliente-direccion"><b>Dirección Destino:</b></label>
-      <input type="text" id="cliente-direccion" placeholder="Ej: Blvd. Isidro López Zertuche, Saltillo, Coah." required>
+      <label for="cliente-direccion-input"><b>Buscar Dirección de Destino:</b></label>
+      <div class="search-container">
+        <input type="text" id="cliente-direccion-input" placeholder="Escribe la dirección, parque industrial o ciudad..." autocomplete="off" oninput="buscarDireccionGPS(this.value)" required>
+        <ul id="sugerencias-gps" class="suggestions-list"></ul>
+      </div>
 
-      <label for="cliente-trayecto"><b>Tiempo Estimado de Trayecto desde POSCO SLP (en Horas):</b></label>
-      <input type="number" id="cliente-trayecto" step="0.1" placeholder="Ej: 4.0" required>
+      <div style="display: flex; gap: 10px;">
+        <div style="flex: 1;">
+          <label><b>Distancia por Carretera:</b></label>
+          <input type="text" id="cliente-distancia" placeholder="Calculando..." readonly style="background:#f8fafc;">
+        </div>
+        <div style="flex: 1;">
+          <label><b>Tiempo de Ruta (Horas):</b></label>
+          <input type="number" id="cliente-trayecto" step="0.1" placeholder="Calculando..." required>
+        </div>
+      </div>
 
-      <button type="submit" class="btn-submit" style="background:#0284c7;">Guardar Cliente</button>
+      <button type="submit" class="btn-submit" style="background:#0284c7;">Guardar Cliente en Catálogo</button>
     </form>
   </div>
 
   <!-- SALIDAS 1: CONFIRMACIÓN DE SALIDA DE EMBARQUE -->
   <div id="panel-salidas" class="panel">
     <h3>Confirmación de Salida de Embarque (Patio y Andén)</h3>
-    <div style="font-size: 13px; line-height: 1.6; margin-bottom: 12px; background: #fff; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
-      <b>Semáforos en Patio:</b><br>
-      🔵 <b>Azul:</b> En andén cargando material.<br>
-      🟢 <b>Verde Azul:</b> Pendiente con tiempo holgado (&gt; 2 hrs de margen).<br>
-      🟡 <b>Amarillo:</b> Cerca de vencerse (ventana de 1 a 2 hrs de margen).<br>
-      🔴 <b>Rojo:</b> Vencido / Riesgo crítico (&lt; 1 hr de margen o tiempo agotado).<br>
-      ⚪ <b>Gris Claro:</b> Unidad con salida confirmada.
-    </div>
     <div class="table-responsive">
       <table>
         <thead>
@@ -200,7 +222,6 @@ th { background-color: #0284c7; color: white; }
   <div id="panel-confirmadas" class="panel">
     <h3>Historial de Confirmaciones</h3>
     
-    <!-- Filtro por Fecha de Salida -->
     <div class="filter-bar">
       <label for="filtro-fecha-salida">Filtrar por Fecha de Salida Real:</label>
       <input type="date" id="filtro-fecha-salida" onchange="filtrarConfirmadasPorFecha()">
@@ -230,9 +251,13 @@ th { background-color: #0284c7; color: white; }
 </div>
 
 <script>
+// Coordenadas fijas de POSCO MPPC San Luis Potosí (Zona Industrial WTC)
+const ORIGEN_POSCO = { lat: 22.0833, lon: -100.8667 };
+
 let embarques = [];
 let usuarioActual = '';
 let fechaFiltroSeleccionada = '';
+let timeoutBusqueda = null;
 
 function alternarPassword() {
   const passInput = document.getElementById('login-password');
@@ -306,6 +331,70 @@ function switchTab(tabId) {
   if (botonActivo) botonActivo.classList.add('active');
 }
 
+/* BUSCADOR DE DIRECCIÓN ESTILO MAPS/WAZE (OpenStreetMap Nominatim) */
+function buscarDireccionGPS(consulta) {
+  clearTimeout(timeoutBusqueda);
+  const lista = document.getElementById('sugerencias-gps');
+
+  if (!consulta || consulta.length < 3) {
+    lista.style.display = 'none';
+    return;
+  }
+
+  timeoutBusqueda = setTimeout(() => {
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=mx&q=${encodeURIComponent(consulta)}&limit=5`)
+      .then(res => res.json())
+      .then(datos => {
+        lista.innerHTML = '';
+        if (datos.length === 0) {
+          lista.style.display = 'none';
+          return;
+        }
+
+        datos.forEach(lugar => {
+          const item = document.createElement('li');
+          item.textContent = lugar.display_name;
+          item.onclick = () => seleccionarDestino(lugar.display_name, lugar.lat, lugar.lon);
+          lista.appendChild(item);
+        });
+
+        lista.style.display = 'block';
+      })
+      .catch(() => {
+        lista.style.display = 'none';
+      });
+  }, 350);
+}
+
+/* CÁLCULO DE RUTA EN TIEMPO REAL DESDE POSCO MPPC SLP (OSRM Routing Engine) */
+function seleccionarDestino(nombreCompleto, destLat, destLon) {
+  document.getElementById('cliente-direccion-input').value = nombreCompleto;
+  document.getElementById('sugerencias-gps').style.display = 'none';
+
+  document.getElementById('cliente-distancia').value = 'Calculando ruta...';
+  document.getElementById('cliente-trayecto').value = '';
+
+  const urlRuta = `https://router.project-osrm.org/route/v1/driving/${ORIGEN_POSCO.lon},${ORIGEN_POSCO.lat};${destLon},${destLat}?overview=false`;
+
+  fetch(urlRuta)
+    .then(res => res.json())
+    .then(datos => {
+      if (datos.routes && datos.routes.length > 0) {
+        const distanciaKm = (datos.routes[0].distance / 1000).toFixed(1);
+        // Duración en segundos convertida a horas con 1 decimal
+        const horasRuta = (datos.routes[0].duration / 3600).toFixed(1);
+
+        document.getElementById('cliente-distancia').value = `${distanciaKm} km`;
+        document.getElementById('cliente-trayecto').value = horasRuta;
+      } else {
+        alert('No se pudo calcular la ruta automática. Puedes ingresar las horas estimadas manualmente.');
+      }
+    })
+    .catch(() => {
+      alert('Error de conexión con el calculador de rutas. Ingresa las horas de viaje manualmente.');
+    });
+}
+
 function calcularHoraLimiteSalida(fechaEntrega, horaEntrega, horasTrayecto) {
   const [year, month, day] = fechaEntrega.split('-').map(Number);
   const [h, m] = horaEntrega.split(':').map(Number);
@@ -319,24 +408,25 @@ function calcularHoraLimiteSalida(fechaEntrega, horaEntrega, horasTrayecto) {
   return { horaStr, fechaStr, timestamp: fechaObj.getTime() };
 }
 
+/* SEMÁFORO VISUAL LIMPIO (SIN NOMBRE DEL COLOR EN TEXTO) */
 function evaluarSemaforo(item) {
   if (item.salidaReal) {
-    return { clase: 'semaforo-gris-claro', texto: '⚪ Salida Confirmada' };
+    return { clase: 'sem-gris', texto: 'Salida confirmada' };
   }
 
   if (item.estado === 'En Andén') {
-    return { clase: 'semaforo-azul', texto: '🔵 En Andén (Cargando)' };
+    return { clase: 'sem-azul', texto: 'En andén (Cargando)' };
   }
 
   const ahora = new Date().getTime();
   const diffMinutos = Math.round((item.limiteTimestamp - ahora) / (1000 * 60));
 
   if (diffMinutos <= 60) {
-    return { clase: 'semaforo-rojo', texto: '🔴 Vencido / Riesgo Crítico' };
+    return { clase: 'sem-rojo', texto: 'Crítico / Retraso' };
   } else if (diffMinutos <= 120) {
-    return { clase: 'semaforo-amarillo', texto: '🟡 Cerca de Vencerse' };
+    return { clase: 'sem-amarillo', texto: 'Alerta preventiva' };
   } else {
-    return { clase: 'semaforo-verde-azul', texto: '🟢 Verde Azul / En Tiempo' };
+    return { clase: 'sem-verde-azul', texto: 'En tiempo' };
   }
 }
 
@@ -377,17 +467,18 @@ function registrarEnvio(e) {
 function registrarCliente(e) {
   e.preventDefault();
   const nombre = document.getElementById('cliente-nombre').value.trim();
-  const direccion = document.getElementById('cliente-direccion').value.trim();
+  const direccion = document.getElementById('cliente-direccion-input').value.trim();
   const trayecto = document.getElementById('cliente-trayecto').value;
 
   const select = document.getElementById('envio-cliente');
   const option = document.createElement('option');
   option.value = `${nombre}|${direccion}|${trayecto}`;
-  option.textContent = `${nombre} (Destino: ${direccion} | Trayecto: ${trayecto} hrs)`;
+  option.textContent = `${nombre} (Destino: ${direccion.slice(0, 35)}... | Ruta: ${trayecto} hrs)`;
   select.appendChild(option);
 
   document.getElementById('form-cliente').reset();
-  alert('Cliente y destino agregados al catálogo con éxito.');
+  document.getElementById('cliente-distancia').value = '';
+  alert('Nuevo cliente y ruta GPS guardados en catálogo.');
   switchTab('envios');
 }
 
@@ -448,7 +539,11 @@ function renderizarTablas() {
         <td>${item.fechaEntrega}</td>
         <td>${item.horaEntrega} hrs</td>
         <td><b>${item.horaLimite} hrs</b> (${item.fechaLimite})</td>
-        <td><span class="semaforo-tag ${semaforo.clase}">${semaforo.texto}</span></td>
+        <td>
+          <span class="semaforo-dot ${semaforo.clase}">
+            <span class="dot"></span> ${semaforo.texto}
+          </span>
+        </td>
         <td>${item.salidaReal ? item.salidaReal : 'En Patio'}</td>
       `;
       tbodyGeneral.appendChild(trGen);
@@ -463,7 +558,11 @@ function renderizarTablas() {
         <td><b>${item.cliente}</b><br><small style="color:#64748b">${item.direccion}</small></td>
         <td>${item.toneladas} Tn</td>
         <td><b>${item.horaLimite} hrs</b><br><small>${item.fechaLimite}</small></td>
-        <td><span class="semaforo-tag ${semaforo.clase}">${semaforo.texto}</span></td>
+        <td>
+          <span class="semaforo-dot ${semaforo.clase}">
+            <span class="dot"></span> ${semaforo.texto}
+          </span>
+        </td>
         <td>
           <button class="btn-anden" onclick="cambiarEstadoAnden(${index})">${esAnden ? '↩ Pasar a Pendiente' : '🚚 Pasar a Andén'}</button>
           <button class="btn-confirmar" onclick="confirmarSalida(${index})">Confirmar Salida</button>
@@ -486,7 +585,11 @@ function renderizarTablas() {
         <td>${item.toneladas} Tn</td>
         <td>${item.fechaEntrega} - ${item.horaEntrega} hrs</td>
         <td>${item.horaLimite} hrs (${item.fechaLimite})</td>
-        <td><span class="semaforo-tag ${semaforo.clase}">${semaforo.texto}</span></td>
+        <td>
+          <span class="semaforo-dot ${semaforo.clase}">
+            <span class="dot"></span> ${semaforo.texto}
+          </span>
+        </td>
         <td><b style="color:#059669">${item.salidaReal}</b></td>
       `;
       tbodySalidasConfirmadas.appendChild(trConf);
@@ -494,7 +597,6 @@ function renderizarTablas() {
   });
 }
 
-// Descargar reporte CSV filtrado o general
 function descargarReporteSalidas() {
   let confirmadas = embarques.filter(e => e.salidaReal !== null);
   
@@ -508,7 +610,7 @@ function descargarReporteSalidas() {
   }
 
   let csvContent = '\uFEFF';
-  csvContent += 'Delivery,Cliente,Direccion Destino,Toneladas,Fecha Entrega,Hora Entrega,Salida Limite,Estado Semaforo,Fecha y Hora Salida Real\n';
+  csvContent += 'Delivery,Cliente,Direccion Destino,Toneladas,Fecha Entrega,Hora Entrega,Salida Limite,Estado,Fecha y Hora Salida Real\n';
 
   confirmadas.forEach(e => {
     csvContent += `"${e.delivery}","${e.cliente}","${e.direccion}","${e.toneladas}","${e.fechaEntrega}","${e.horaEntrega}","${e.horaLimite}","Salida Confirmada","${e.salidaReal}"\n`;
@@ -525,7 +627,6 @@ function descargarReporteSalidas() {
   document.body.removeChild(link);
 }
 
-// Actualización de semáforos cada 10 segundos
 setInterval(renderizarTablas, 10000);
 
 function logout() {
