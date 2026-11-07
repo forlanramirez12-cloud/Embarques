@@ -33,21 +33,28 @@ h2 { color: #1e3a8a; margin-top: 5px; }
 input, select, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 14px; }
 button { border: none; padding: 11px; cursor: pointer; font-weight: bold; border-radius: 4px; }
 .btn-submit { background: #10b981; color: white; font-size: 15px; }
-.btn-confirmar { background: #059669; color: white; border: none; padding: 8px 14px; font-size: 13px; border-radius: 4px; font-weight: bold; }
-.btn-descargar { background: #1e293b; color: white; padding: 8px 14px; border-radius: 4px; font-size: 13px; margin-bottom: 15px; }
+
+/* Botones y filtros */
+.btn-anden { background: #0284c7; color: white; padding: 6px 10px; font-size: 12px; border-radius: 4px; margin-bottom: 4px; display: block; width: 100%; }
+.btn-confirmar { background: #059669; color: white; padding: 6px 10px; font-size: 12px; border-radius: 4px; display: block; width: 100%; font-weight: bold; }
+.btn-descargar { background: #1e293b; color: white; padding: 8px 14px; border-radius: 4px; font-size: 13px; cursor: pointer; }
+.filter-bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 15px; background: #f8fafc; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
+.filter-bar label { font-size: 13px; font-weight: bold; }
+.filter-bar input[type="date"] { padding: 6px 10px; font-size: 13px; }
 
 .table-responsive { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; min-width: 650px; }
-th, td { border: 1px solid #e2e8f0; padding: 9px; text-align: left; }
+table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; min-width: 820px; }
+th, td { border: 1px solid #e2e8f0; padding: 9px; text-align: left; vertical-align: middle; }
 th { background-color: #0284c7; color: white; }
 .th-salidas { background-color: #059669; }
 
-/* Semáforos */
-.semaforo-tag { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; text-transform: uppercase; }
-.semaforo-verde { background-color: #d1fae5 !important; color: #065f46 !important; }
-.semaforo-amarillo { background-color: #fef3c7 !important; color: #92400e !important; }
-.semaforo-rojo { background-color: #fee2e2 !important; color: #991b1b !important; }
-.semaforo-gris { background-color: #f1f5f9 !important; color: #64748b !important; }
+/* Semáforos personalizados */
+.semaforo-tag { padding: 5px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; display: inline-block; text-transform: uppercase; text-align: center; }
+.semaforo-azul { background-color: #dbeafe !important; color: #1d4ed8 !important; border: 1px solid #93c5fd; }
+.semaforo-verde-azul { background-color: #ccfbf1 !important; color: #0f766e !important; border: 1px solid #5eead4; }
+.semaforo-amarillo { background-color: #fef3c7 !important; color: #92400e !important; border: 1px solid #fcd34d; }
+.semaforo-rojo { background-color: #fee2e2 !important; color: #991b1b !important; border: 1px solid #fca5a5; }
+.semaforo-gris-claro { background-color: #f1f5f9 !important; color: #475569 !important; border: 1px solid #cbd5e1; }
 </style>
 </head>
 <body>
@@ -57,8 +64,8 @@ th { background-color: #0284c7; color: white; }
   <h3>🔒 Ingreso al Sistema</h3>
   <select id="login-usuario" class="login-field">
     <option value="">-- Selecciona tu Cuenta --</option>
-    <option value="oficina">Oficina (Planificación y Clientes)</option>
-    <option value="salidas">Salidas (Patio y Despacho)</option>
+    <option value="oficina">Oficina (Solicitud y Clientes)</option>
+    <option value="salidas">Salidas (Confirmación e Historial)</option>
   </select>
 
   <div class="password-group">
@@ -79,45 +86,52 @@ th { background-color: #0284c7; color: white; }
   <h2>🚚 Control y Monitoreo de Embarques</h2>
   <div class="origin-badge">📍 Origen Fijo: POSCO MPPC SLP (Zona Industrial)</div>
 
-  <!-- PESTAÑAS DINÁMICAS -->
+  <!-- PESTAÑAS -->
   <div class="tabs">
-    <!-- Pestañas para Oficina -->
-    <button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitar Envíos</button>
+    <!-- Pestañas Oficina -->
+    <button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitud de Embarque</button>
     <button id="btn-tab-general" class="tab-btn" onclick="switchTab('general')">2. Historial de Carga</button>
-    <button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Destinos / Clientes</button>
+    <button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes</button>
     
-    <!-- Pestañas para Salidas -->
-    <button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">1. Unidades en Patio ⏱️</button>
-    <button id="btn-tab-confirmadas" class="tab-btn" onclick="switchTab('confirmadas')">2. Unidades Confirmadas / Salidas</button>
+    <!-- Pestañas Salidas -->
+    <button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">1. Confirmación de Salida ⏱️</button>
+    <button id="btn-tab-confirmadas" class="tab-btn" onclick="switchTab('confirmadas')">2. Historial de Confirmaciones 📅</button>
   </div>
 
-  <!-- PANEL OFICINA: REGISTRAR EMBARQUES -->
+  <!-- OFICINA 1: SOLICITUD DE EMBARQUE -->
   <div id="panel-envios" class="panel">
-    <h3>Registrar Nuevo Envío</h3>
+    <h3>Nueva Solicitud de Embarque</h3>
     <form id="form-envio" class="app-form" onsubmit="registrarEnvio(event)">
-      <input type="text" id="envio-delivery" placeholder="Folio / Delivery (Ej: DEL-5001)" required>
+      <label for="envio-delivery"><b>Folio Delivery:</b></label>
+      <input type="text" id="envio-delivery" placeholder="Ej: DEL-5001" required>
 
-      <label for="envio-cliente"><b>Cliente y Destino:</b></label>
+      <label for="envio-cliente"><b>Cliente y Dirección Destino:</b></label>
       <select id="envio-cliente" required>
         <option value="">-- Selecciona un Cliente --</option>
-        <option value="Mabe Saltillo|Saltillo, Coah.|4.0">Mabe Saltillo (Destino: Saltillo | Trayecto: 4.0 hrs)</option>
-        <option value="Stellantis Toluca|Toluca, Edo. Méx.|4.5">Stellantis (Destino: Toluca | Trayecto: 4.5 hrs)</option>
-        <option value="DN Automotive SLP|Villa de Reyes, SLP|0.7">DN Automotive (Destino: Villa de Reyes | Trayecto: 0.7 hrs)</option>
+        <option value="Mabe Saltillo|Saltillo, Coahuila|4.0">Mabe Saltillo (Destino: Saltillo, Coahuila | Trayecto: 4.0 hrs)</option>
+        <option value="Stellantis Toluca|Toluca, Edo. Méx.|4.5">Stellantis (Destino: Toluca, Edo. Méx. | Trayecto: 4.5 hrs)</option>
+        <option value="DN Automotive SLP|Villa de Reyes, SLP|0.7">DN Automotive (Destino: Villa de Reyes, SLP | Trayecto: 0.7 hrs)</option>
       </select>
 
-      <input type="number" id="envio-toneladas" step="0.1" placeholder="Toneladas de Material" required>
+      <label for="envio-toneladas"><b>Toneladas:</b></label>
+      <input type="number" id="envio-toneladas" step="0.1" placeholder="Ej: 24.5" required>
 
-      <label for="envio-hora"><b>Hora requerida de Entrega con Cliente:</b></label>
+      <label for="envio-fecha"><b>Fecha requerida de Entrega:</b></label>
+      <input type="date" id="envio-fecha" required>
+
+      <label for="envio-hora"><b>Hora requerida de Entrega:</b></label>
       <input type="time" id="envio-hora" required>
 
-      <textarea id="envio-comentario" placeholder="Comentarios u observaciones..."></textarea>
-      <button type="submit" class="btn-submit">Programar Embarque</button>
+      <label for="envio-comentario"><b>Comentarios u observaciones:</b></label>
+      <textarea id="envio-comentario" placeholder="Notas de andén o producto..."></textarea>
+      
+      <button type="submit" class="btn-submit">Programar Solicitud de Embarque</button>
     </form>
   </div>
 
-  <!-- PANEL OFICINA: HISTORIAL GENERAL -->
+  <!-- OFICINA 2: HISTORIAL GENERAL DE CARGA -->
   <div id="panel-general" class="panel">
-    <h3>Historial General de Embarques</h3>
+    <h3>Historial General de Carga (Monitoreo de Oficina)</h3>
     <div class="table-responsive">
       <table>
         <thead>
@@ -125,10 +139,11 @@ th { background-color: #0284c7; color: white; }
             <th>Delivery</th>
             <th>Cliente y Destino</th>
             <th>Toneladas</th>
-            <th>Entrega Cliente</th>
-            <th>Salida Límite</th>
-            <th>Estado</th>
-            <th>Salida Real</th>
+            <th>Fecha Entrega</th>
+            <th>Hora Entrega</th>
+            <th>Salida Límite Sugerida</th>
+            <th>Semáforo</th>
+            <th>Salida Real Caseta</th>
           </tr>
         </thead>
         <tbody id="tabla-general-cuerpo"></tbody>
@@ -136,48 +151,34 @@ th { background-color: #0284c7; color: white; }
     </div>
   </div>
 
-  <!-- PANEL OFICINA: ALTA DE CLIENTES -->
+  <!-- OFICINA 3: ALTA DE CLIENTES -->
   <div id="panel-clientes" class="panel">
-    <h3>Agregar Destino / Cliente</h3>
+    <h3>Alta de Clientes y Destinos</h3>
     <form id="form-cliente" class="app-form" onsubmit="registrarCliente(event)">
-      <label><b>Nombre de la Empresa / Planta:</b></label>
-      <input type="text" id="cliente-nombre" placeholder="Ej: Mabe Planta Monterrey" required>
+      <label for="cliente-nombre"><b>Nombre del Cliente / Empresa:</b></label>
+      <input type="text" id="cliente-nombre" placeholder="Ej: Mabe Saltillo" required>
 
-      <label><b>Dirección / Ciudad de Entrega:</b></label>
-      <input type="text" id="cliente-direccion" placeholder="Ej: Carretera Miguel Alemán Km 15, Apodaca, NL" required>
+      <label for="cliente-direccion"><b>Dirección Destino:</b></label>
+      <input type="text" id="cliente-direccion" placeholder="Ej: Blvd. Isidro López Zertuche, Saltillo, Coah." required>
 
-      <label><b>Tiempo Estimado de Viaje desde POSCO SLP (en Horas):</b></label>
-      <input type="number" id="cliente-trayecto" step="0.1" placeholder="Ej: 5.5" required>
+      <label for="cliente-trayecto"><b>Tiempo Estimado de Trayecto desde POSCO SLP (en Horas):</b></label>
+      <input type="number" id="cliente-trayecto" step="0.1" placeholder="Ej: 4.0" required>
 
       <button type="submit" class="btn-submit" style="background:#0284c7;">Guardar Cliente</button>
     </form>
   </div>
 
-  <!-- PANEL SALIDAS: PESTAÑA 1 (PENDIENTES POR CONFIRMAR) -->
+  <!-- SALIDAS 1: CONFIRMACIÓN DE SALIDA DE EMBARQUE -->
   <div id="panel-salidas" class="panel">
-    <h3>Unidades Pendientes de Salida en Patio</h3>
-    <p style="font-size: 13px; color: #555;">Presiona <b>Confirmar Salida</b> únicamente al momento exacto en que la unidad cruce caseta de POSCO MPPC.</p>
-    <div class="table-responsive">
-      <table>
-        <thead>
-          <tr>
-            <th class="th-salidas">Delivery</th>
-            <th class="th-salidas">Cliente y Destino</th>
-            <th class="th-salidas">Trayecto Estimado</th>
-            <th class="th-salidas">Salida Límite</th>
-            <th class="th-salidas">Prioridad Semáforo</th>
-            <th class="th-salidas">Acción</th>
-          </tr>
-        </thead>
-        <tbody id="tabla-salidas-pendientes-cuerpo"></tbody>
-      </table>
+    <h3>Confirmación de Salida de Embarque (Patio y Andén)</h3>
+    <div style="font-size: 13px; line-height: 1.6; margin-bottom: 12px; background: #fff; padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px;">
+      <b>Semáforos en Patio:</b><br>
+      🔵 <b>Azul:</b> En andén cargando material.<br>
+      🟢 <b>Verde Azul:</b> Pendiente con tiempo holgado (&gt; 2 hrs de margen).<br>
+      🟡 <b>Amarillo:</b> Cerca de vencerse (ventana de 1 a 2 hrs de margen).<br>
+      🔴 <b>Rojo:</b> Vencido / Riesgo crítico (&lt; 1 hr de margen o tiempo agotado).<br>
+      ⚪ <b>Gris Claro:</b> Unidad con salida confirmada.
     </div>
-  </div>
-
-  <!-- PANEL SALIDAS: PESTAÑA 2 (CONFIRMADAS + DESCARGA) -->
-  <div id="panel-confirmadas" class="panel">
-    <h3>Unidades Despachadas (Salidas Confirmadas)</h3>
-    <button type="button" class="btn-descargar" onclick="descargarReporteSalidas()">📥 Descargar Reporte de Salidas (Excel/CSV)</button>
     <div class="table-responsive">
       <table>
         <thead>
@@ -185,8 +186,40 @@ th { background-color: #0284c7; color: white; }
             <th class="th-salidas">Delivery</th>
             <th class="th-salidas">Cliente y Destino</th>
             <th class="th-salidas">Toneladas</th>
-            <th class="th-salidas">Hora Límite Programada</th>
-            <th class="th-salidas">Fecha y Hora de Salida Real</th>
+            <th class="th-salidas">Salida Límite</th>
+            <th class="th-salidas">Semáforo</th>
+            <th class="th-salidas" style="width: 170px;">Acción Caseta</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-salidas-pendientes-cuerpo"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SALIDAS 2: HISTORIAL DE CONFIRMACIONES POR FECHA -->
+  <div id="panel-confirmadas" class="panel">
+    <h3>Historial de Confirmaciones</h3>
+    
+    <!-- Filtro por Fecha de Salida -->
+    <div class="filter-bar">
+      <label for="filtro-fecha-salida">Filtrar por Fecha de Salida Real:</label>
+      <input type="date" id="filtro-fecha-salida" onchange="filtrarConfirmadasPorFecha()">
+      <button type="button" onclick="limpiarFiltroFecha()" style="background:#64748b; color:white; padding:6px 12px; font-size:12px; border:none; border-radius:4px; cursor:pointer;">Mostrar Todas</button>
+      <button type="button" class="btn-descargar" onclick="descargarReporteSalidas()" style="margin-left:auto;">📥 Descargar Reporte (Excel/CSV)</button>
+    </div>
+
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th class="th-salidas">Delivery</th>
+            <th class="th-salidas">Cliente</th>
+            <th class="th-salidas">Dirección Destino</th>
+            <th class="th-salidas">Toneladas</th>
+            <th class="th-salidas">Fecha y Hora Entrega Requerida</th>
+            <th class="th-salidas">Salida Límite Sugerida</th>
+            <th class="th-salidas">Semáforo</th>
+            <th class="th-salidas">Fecha y Hora Salida Real (Caseta)</th>
           </tr>
         </thead>
         <tbody id="tabla-salidas-confirmadas-cuerpo"></tbody>
@@ -199,6 +232,7 @@ th { background-color: #0284c7; color: white; }
 <script>
 let embarques = [];
 let usuarioActual = '';
+let fechaFiltroSeleccionada = '';
 
 function alternarPassword() {
   const passInput = document.getElementById('login-password');
@@ -239,14 +273,268 @@ function ejecutarLogin() {
 }
 
 function configurarPermisos(perfil) {
-  // Pestañas oficina
   const btnEnvios = document.getElementById('btn-tab-envios');
   const btnGeneral = document.getElementById('btn-tab-general');
   const btnClientes = document.getElementById('btn-tab-clientes');
-  // Pestañas salidas
   const btnSalidas = document.getElementById('btn-tab-salidas');
   const btnConfirmadas = document.getElementById('btn-tab-confirmadas');
 
   if (perfil === 'oficina') {
     btnEnvios.style.display = 'inline-block';
     btnGeneral.style.display = 'inline-block';
+    btnClientes.style.display = 'inline-block';
+    btnSalidas.style.display = 'none';
+    btnConfirmadas.style.display = 'none';
+    switchTab('envios');
+  } else if (perfil === 'salidas') {
+    btnEnvios.style.display = 'none';
+    btnGeneral.style.display = 'none';
+    btnClientes.style.display = 'none';
+    btnSalidas.style.display = 'inline-block';
+    btnConfirmadas.style.display = 'inline-block';
+    switchTab('salidas');
+  }
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+  const panelActivo = document.getElementById('panel-' + tabId);
+  const botonActivo = document.getElementById('btn-tab-' + tabId);
+  if (panelActivo) panelActivo.classList.add('active');
+  if (botonActivo) botonActivo.classList.add('active');
+}
+
+function calcularHoraLimiteSalida(fechaEntrega, horaEntrega, horasTrayecto) {
+  const [year, month, day] = fechaEntrega.split('-').map(Number);
+  const [h, m] = horaEntrega.split(':').map(Number);
+  const fechaObj = new Date(year, month - 1, day, h, m);
+  
+  const minutosARestar = Math.round(horasTrayecto * 60);
+  fechaObj.setMinutes(fechaObj.getMinutes() - minutosARestar);
+
+  const horaStr = fechaObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const fechaStr = fechaObj.toISOString().slice(0, 10);
+  return { horaStr, fechaStr, timestamp: fechaObj.getTime() };
+}
+
+function evaluarSemaforo(item) {
+  if (item.salidaReal) {
+    return { clase: 'semaforo-gris-claro', texto: '⚪ Salida Confirmada' };
+  }
+
+  if (item.estado === 'En Andén') {
+    return { clase: 'semaforo-azul', texto: '🔵 En Andén (Cargando)' };
+  }
+
+  const ahora = new Date().getTime();
+  const diffMinutos = Math.round((item.limiteTimestamp - ahora) / (1000 * 60));
+
+  if (diffMinutos <= 60) {
+    return { clase: 'semaforo-rojo', texto: '🔴 Vencido / Riesgo Crítico' };
+  } else if (diffMinutos <= 120) {
+    return { clase: 'semaforo-amarillo', texto: '🟡 Cerca de Vencerse' };
+  } else {
+    return { clase: 'semaforo-verde-azul', texto: '🟢 Verde Azul / En Tiempo' };
+  }
+}
+
+function registrarEnvio(e) {
+  e.preventDefault();
+  const delivery = document.getElementById('envio-delivery').value.trim();
+  const [cliente, direccion, trayectoStr] = document.getElementById('envio-cliente').value.split('|');
+  const trayecto = parseFloat(trayectoStr);
+  const toneladas = document.getElementById('envio-toneladas').value;
+  const fechaEntrega = document.getElementById('envio-fecha').value;
+  const horaEntrega = document.getElementById('envio-hora').value;
+
+  const limite = calcularHoraLimiteSalida(fechaEntrega, horaEntrega, trayecto);
+
+  embarques.push({
+    delivery,
+    cliente,
+    direccion,
+    trayecto,
+    toneladas,
+    fechaEntrega,
+    horaEntrega,
+    horaLimite: limite.horaStr,
+    fechaLimite: limite.fechaStr,
+    limiteTimestamp: limite.timestamp,
+    estado: 'Pendiente',
+    salidaReal: null,
+    fechaSalidaReal: null,
+    horaSalidaReal: null
+  });
+
+  document.getElementById('form-envio').reset();
+  renderizarTablas();
+  alert('Solicitud de embarque registrada exitosamente.');
+  switchTab('general');
+}
+
+function registrarCliente(e) {
+  e.preventDefault();
+  const nombre = document.getElementById('cliente-nombre').value.trim();
+  const direccion = document.getElementById('cliente-direccion').value.trim();
+  const trayecto = document.getElementById('cliente-trayecto').value;
+
+  const select = document.getElementById('envio-cliente');
+  const option = document.createElement('option');
+  option.value = `${nombre}|${direccion}|${trayecto}`;
+  option.textContent = `${nombre} (Destino: ${direccion} | Trayecto: ${trayecto} hrs)`;
+  select.appendChild(option);
+
+  document.getElementById('form-cliente').reset();
+  alert('Cliente y destino agregados al catálogo con éxito.');
+  switchTab('envios');
+}
+
+function cambiarEstadoAnden(index) {
+  if (embarques[index].estado === 'En Andén') {
+    embarques[index].estado = 'Pendiente';
+  } else {
+    embarques[index].estado = 'En Andén';
+  }
+  renderizarTablas();
+}
+
+function confirmarSalida(index) {
+  const ahora = new Date();
+  const anio = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  const fechaISO = `${anio}-${mes}-${dia}`;
+  const horaStr = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  embarques[index].salidaReal = `${fechaISO} ${horaStr}`;
+  embarques[index].fechaSalidaReal = fechaISO;
+  embarques[index].horaSalidaReal = horaStr;
+  embarques[index].estado = 'Confirmada';
+  renderizarTablas();
+}
+
+function filtrarConfirmadasPorFecha() {
+  fechaFiltroSeleccionada = document.getElementById('filtro-fecha-salida').value;
+  renderizarTablas();
+}
+
+function limpiarFiltroFecha() {
+  fechaFiltroSeleccionada = '';
+  document.getElementById('filtro-fecha-salida').value = '';
+  renderizarTablas();
+}
+
+function renderizarTablas() {
+  const tbodyGeneral = document.getElementById('tabla-general-cuerpo');
+  const tbodySalidasPendientes = document.getElementById('tabla-salidas-pendientes-cuerpo');
+  const tbodySalidasConfirmadas = document.getElementById('tabla-salidas-confirmadas-cuerpo');
+
+  if (tbodyGeneral) tbodyGeneral.innerHTML = '';
+  if (tbodySalidasPendientes) tbodySalidasPendientes.innerHTML = '';
+  if (tbodySalidasConfirmadas) tbodySalidasConfirmadas.innerHTML = '';
+
+  embarques.forEach((item, index) => {
+    const semaforo = evaluarSemaforo(item);
+
+    // 1. Vista Oficina: Historial General de Carga
+    if (tbodyGeneral) {
+      const trGen = document.createElement('tr');
+      trGen.innerHTML = `
+        <td><b>${item.delivery}</b></td>
+        <td><b>${item.cliente}</b><br><small style="color:#64748b">${item.direccion}</small></td>
+        <td>${item.toneladas} Tn</td>
+        <td>${item.fechaEntrega}</td>
+        <td>${item.horaEntrega} hrs</td>
+        <td><b>${item.horaLimite} hrs</b> (${item.fechaLimite})</td>
+        <td><span class="semaforo-tag ${semaforo.clase}">${semaforo.texto}</span></td>
+        <td>${item.salidaReal ? item.salidaReal : 'En Patio'}</td>
+      `;
+      tbodyGeneral.appendChild(trGen);
+    }
+
+    // 2. Vista Salidas: Confirmación de Salida (Pendientes y En Andén)
+    if (!item.salidaReal && tbodySalidasPendientes) {
+      const trPend = document.createElement('tr');
+      const esAnden = item.estado === 'En Andén';
+      trPend.innerHTML = `
+        <td><b>${item.delivery}</b></td>
+        <td><b>${item.cliente}</b><br><small style="color:#64748b">${item.direccion}</small></td>
+        <td>${item.toneladas} Tn</td>
+        <td><b>${item.horaLimite} hrs</b><br><small>${item.fechaLimite}</small></td>
+        <td><span class="semaforo-tag ${semaforo.clase}">${semaforo.texto}</span></td>
+        <td>
+          <button class="btn-anden" onclick="cambiarEstadoAnden(${index})">${esAnden ? '↩ Pasar a Pendiente' : '🚚 Pasar a Andén'}</button>
+          <button class="btn-confirmar" onclick="confirmarSalida(${index})">Confirmar Salida</button>
+        </td>
+      `;
+      tbodySalidasPendientes.appendChild(trPend);
+    }
+
+    // 3. Vista Salidas: Historial de Confirmaciones (Filtrable por Fecha)
+    if (item.salidaReal && tbodySalidasConfirmadas) {
+      if (fechaFiltroSeleccionada && item.fechaSalidaReal !== fechaFiltroSeleccionada) {
+        return;
+      }
+
+      const trConf = document.createElement('tr');
+      trConf.innerHTML = `
+        <td><b>${item.delivery}</b></td>
+        <td><b>${item.cliente}</b></td>
+        <td>${item.direccion}</td>
+        <td>${item.toneladas} Tn</td>
+        <td>${item.fechaEntrega} - ${item.horaEntrega} hrs</td>
+        <td>${item.horaLimite} hrs (${item.fechaLimite})</td>
+        <td><span class="semaforo-tag ${semaforo.clase}">${semaforo.texto}</span></td>
+        <td><b style="color:#059669">${item.salidaReal}</b></td>
+      `;
+      tbodySalidasConfirmadas.appendChild(trConf);
+    }
+  });
+}
+
+// Descargar reporte CSV filtrado o general
+function descargarReporteSalidas() {
+  let confirmadas = embarques.filter(e => e.salidaReal !== null);
+  
+  if (fechaFiltroSeleccionada) {
+    confirmadas = confirmadas.filter(e => e.fechaSalidaReal === fechaFiltroSeleccionada);
+  }
+
+  if (confirmadas.length === 0) {
+    alert('No hay unidades confirmadas en la fecha seleccionada.');
+    return;
+  }
+
+  let csvContent = '\uFEFF';
+  csvContent += 'Delivery,Cliente,Direccion Destino,Toneladas,Fecha Entrega,Hora Entrega,Salida Limite,Estado Semaforo,Fecha y Hora Salida Real\n';
+
+  confirmadas.forEach(e => {
+    csvContent += `"${e.delivery}","${e.cliente}","${e.direccion}","${e.toneladas}","${e.fechaEntrega}","${e.horaEntrega}","${e.horaLimite}","Salida Confirmada","${e.salidaReal}"\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  const sufijoFecha = fechaFiltroSeleccionada ? `_${fechaFiltroSeleccionada}` : `_${new Date().toISOString().slice(0, 10)}`;
+  link.setAttribute('download', `Salidas_Confirmadas_POSCO${sufijoFecha}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+// Actualización de semáforos cada 10 segundos
+setInterval(renderizarTablas, 10000);
+
+function logout() {
+  usuarioActual = '';
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('app-content').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'block';
+}
+</script>
+</body>
+</html>
