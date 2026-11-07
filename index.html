@@ -57,7 +57,7 @@ th, td { border: 1px solid #e2e8f0; padding: 9px; text-align: left; vertical-ali
 th { background-color: #0284c7; color: white; }
 .th-salidas { background-color: #059669; }
 
-/* Semáforos limpios sin texto de color */
+/* Semáforos limpios */
 .semaforo-dot { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
@@ -275,14 +275,21 @@ th { background-color: #0284c7; color: white; }
 <script>
 const ORIGEN_POSCO = { lat: 22.0833, lon: -100.8667 };
 
-// Catálogo inicial de clientes
-let catalogoClientes = [
+// Persistencia con localStorage para que no se borre al recargar o cerrar sesión
+const clientesBase = [
   { nombre: "Mabe Saltillo", direccion: "Blvd. Isidro López Zertuche, Saltillo, Coahuila", trayecto: 4.0 },
   { nombre: "Stellantis Toluca", direccion: "Av. Industria Automotriz, Toluca, Edo. Méx.", trayecto: 4.5 },
   { nombre: "DN Automotive SLP", direccion: "Parque Industrial Logistik, Villa de Reyes, SLP", trayecto: 0.7 }
 ];
 
-let embarques = [];
+let catalogoClientes = JSON.parse(localStorage.getItem('posco_clientes')) || clientesBase;
+let embarques = JSON.parse(localStorage.getItem('posco_embarques')) || [];
+
+function persistirDatos() {
+  localStorage.setItem('posco_clientes', JSON.stringify(catalogoClientes));
+  localStorage.setItem('posco_embarques', JSON.stringify(embarques));
+}
+
 let usuarioActual = '';
 let fechaFiltroSeleccionada = '';
 let timeoutBusqueda = null;
@@ -522,6 +529,7 @@ function guardarEnvio(e) {
     cancelarEdicionEnvio();
   }
 
+  persistirDatos();
   document.getElementById('form-envio').reset();
   renderizarTablas();
   switchTab('general');
@@ -566,6 +574,7 @@ function eliminarEnvio(index) {
   const item = embarques[index];
   if (confirm(`¿Estás seguro de eliminar el embarque con Delivery "${item.delivery}"?`)) {
     embarques.splice(index, 1);
+    persistirDatos();
     renderizarTablas();
     alert('Embarque eliminado.');
   }
@@ -590,6 +599,7 @@ function guardarCliente(e) {
     cancelarEdicionCliente();
   }
 
+  persistirDatos();
   document.getElementById('form-cliente').reset();
   document.getElementById('cliente-distancia').value = '';
   actualizarSelectClientes();
@@ -626,6 +636,7 @@ function eliminarCliente(index) {
   const c = catalogoClientes[index];
   if (confirm(`¿Estás seguro de eliminar al cliente "${c.nombre}" del catálogo?`)) {
     catalogoClientes.splice(index, 1);
+    persistirDatos();
     actualizarSelectClientes();
     renderizarTablaClientes();
     alert('Cliente eliminado del catálogo.');
@@ -658,6 +669,7 @@ function cambiarEstadoAnden(index) {
   } else {
     embarques[index].estado = 'En Andén';
   }
+  persistirDatos();
   renderizarTablas();
 }
 
@@ -673,6 +685,7 @@ function confirmarSalida(index) {
   embarques[index].fechaSalidaReal = fechaISO;
   embarques[index].horaSalidaReal = horaStr;
   embarques[index].estado = 'Confirmada';
+  persistirDatos();
   renderizarTablas();
 }
 
