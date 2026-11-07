@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Control de Embarques - POSCO MPPC SLP</title>
+
+<!-- Firebase SDK en la nube -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
 <style>
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; margin: 15px; background-color: #f4f7f6; color: #333; }
 h2 { color: #1e3a8a; margin-top: 5px; }
@@ -99,7 +104,7 @@ th { background-color: #0284c7; color: white; }
 <!-- APP -->
 <div id="app-content">
   <div class="user-bar">
-    <span>Sesión: <b id="user-display"></b></span>
+    <span>Sesión: <b id="user-display"></b> | <small id="sync-status" style="color:#38bdf8;">🟢 Conectado en la nube (Sincronizado)</small></span>
     <button class="btn-logout" onclick="logout()">Salir</button>
   </div>
 
@@ -118,11 +123,11 @@ th { background-color: #0284c7; color: white; }
     <button id="btn-tab-confirmadas" class="tab-btn" onclick="switchTab('confirmadas')">2. Historial de Confirmaciones 📅</button>
   </div>
 
-  <!-- OFICINA / EMBARQUES 1: SOLICITUD DE EMBARQUE -->
+  <!-- EMBARQUES 1: SOLICITUD DE EMBARQUE -->
   <div id="panel-envios" class="panel">
     <h3 id="titulo-form-envio">Nueva Solicitud de Embarque</h3>
     <form id="form-envio" class="app-form" onsubmit="guardarEnvio(event)">
-      <input type="hidden" id="envio-edit-index" value="-1">
+      <input type="hidden" id="envio-edit-key" value="">
 
       <label for="envio-delivery"><b>Folio Delivery:</b></label>
       <input type="text" id="envio-delivery" placeholder="Ej: DEL-5001" required>
@@ -149,7 +154,7 @@ th { background-color: #0284c7; color: white; }
     </form>
   </div>
 
-  <!-- OFICINA / EMBARQUES 2: HISTORIAL GENERAL DE CARGA -->
+  <!-- EMBARQUES 2: HISTORIAL GENERAL DE CARGA -->
   <div id="panel-general" class="panel">
     <h3>Historial General de Carga (Monitoreo de Oficina)</h3>
     <div class="table-responsive">
@@ -172,13 +177,13 @@ th { background-color: #0284c7; color: white; }
     </div>
   </div>
 
-  <!-- OFICINA / EMBARQUES 3: ALTA Y EDICIÓN DE CLIENTES CON BUSCADOR GPS -->
+  <!-- EMBARQUES 3: ALTA Y EDICIÓN DE CLIENTES CON GPS -->
   <div id="panel-clientes" class="panel">
     <h3 id="titulo-form-cliente">Alta de Cliente con Cálculo de Ruta (Maps / GPS)</h3>
     <p style="font-size: 13px; color: #555;">Busca la dirección o parque industrial. La distancia y horas por carretera desde POSCO SLP se calculan automáticamente.</p>
     
     <form id="form-cliente" class="app-form" onsubmit="guardarCliente(event)">
-      <input type="hidden" id="cliente-edit-index" value="-1">
+      <input type="hidden" id="cliente-edit-key" value="">
 
       <label for="cliente-nombre"><b>Nombre del Cliente / Empresa:</b></label>
       <input type="text" id="cliente-nombre" placeholder="Ej: Mabe Saltillo" required>
@@ -220,7 +225,7 @@ th { background-color: #0284c7; color: white; }
     </div>
   </div>
 
-  <!-- ALMACÉN 1: CONFIRMACIÓN DE SALIDA DE EMBARQUE -->
+  <!-- ALMACÉN 1: CONFIRMACIÓN DE SALIDA -->
   <div id="panel-salidas" class="panel">
     <h3>Confirmación de Salida de Embarque (Patio y Andén)</h3>
     <div class="table-responsive">
@@ -240,14 +245,13 @@ th { background-color: #0284c7; color: white; }
     </div>
   </div>
 
-  <!-- ALMACÉN 2: HISTORIAL DE CONFIRMACIONES POR FECHA -->
+  <!-- ALMACÉN 2: HISTORIAL DE CONFIRMACIONES -->
   <div id="panel-confirmadas" class="panel">
     <h3>Historial de Confirmaciones</h3>
-    
     <div class="filter-bar">
       <label for="filtro-fecha-salida">Filtrar por Fecha de Salida Real:</label>
-      <input type="date" id="filtro-fecha-salida" onchange="filtrarConfirmadasPorFecha()">
-      <button type="button" onclick="limpiarFiltroFecha()" style="background:#64748b; color:white; padding:6px 12px; font-size:12px; border:none; border-radius:4px; cursor:pointer;">Mostrar Todas</button>
+      <input type="date" id="filtro-fecha-salida" onchange="renderizarTablas()">
+      <button type="button" onclick="document.getElementById('filtro-fecha-salida').value=''; renderizarTablas();" style="background:#64748b; color:white; padding:6px 12px; font-size:12px; border:none; border-radius:4px; cursor:pointer;">Mostrar Todas</button>
       <button type="button" class="btn-descargar" onclick="descargarReporteSalidas()" style="margin-left:auto;">📥 Descargar Reporte (Excel/CSV)</button>
     </div>
 
@@ -273,39 +277,68 @@ th { background-color: #0284c7; color: white; }
 </div>
 
 <script>
+// ==================== CONFIGURACIÓN DE FIREBASE ====================
+const firebaseConfig = {
+  apiKey: "AIzaSyDonYYvfjGabzM6Cw_vRBI_ALQ_AoYGYW0",
+  authDomain: "embarques-posco.firebaseapp.com",
+  databaseURL: "https://embarques-posco-default-rtdb.firebaseio.com",
+  projectId: "embarques-posco",
+  storageBucket: "embarques-posco.firebasestorage.app",
+  messagingSenderId: "965869957869",
+  appId: "1:965869957869:web:65c3926a087caa9b5892e4",
+  measurementId: "G-74LFX25H03"
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const refClientes = db.ref('posco/clientes');
+const refEmbarques = db.ref('posco/embarques');
+
 const ORIGEN_POSCO = { lat: 22.0833, lon: -100.8667 };
 
-// Persistencia con localStorage para que no se borre al recargar o cerrar sesión
-const clientesBase = [
+// Catálogo base de respaldo si la base de datos está vacía al inicio
+const clientesIniciales = [
   { nombre: "Mabe Saltillo", direccion: "Blvd. Isidro López Zertuche, Saltillo, Coahuila", trayecto: 4.0 },
   { nombre: "Stellantis Toluca", direccion: "Av. Industria Automotriz, Toluca, Edo. Méx.", trayecto: 4.5 },
   { nombre: "DN Automotive SLP", direccion: "Parque Industrial Logistik, Villa de Reyes, SLP", trayecto: 0.7 }
 ];
 
-let catalogoClientes = JSON.parse(localStorage.getItem('posco_clientes')) || clientesBase;
-let embarques = JSON.parse(localStorage.getItem('posco_embarques')) || [];
-
-function persistirDatos() {
-  localStorage.setItem('posco_clientes', JSON.stringify(catalogoClientes));
-  localStorage.setItem('posco_embarques', JSON.stringify(embarques));
-}
-
+let catalogoClientes = {};
+let embarques = {};
 let usuarioActual = '';
-let fechaFiltroSeleccionada = '';
+let perfilActual = '';
 let timeoutBusqueda = null;
+
+// Sincronización en tiempo real desde la nube de Firebase
+refClientes.on('value', snapshot => {
+  const data = snapshot.val();
+  if (!data) {
+    clientesIniciales.forEach(c => refClientes.push(c));
+  } else {
+    catalogoClientes = data;
+    actualizarSelectClientes();
+    renderizarTablaClientes();
+  }
+});
+
+refEmbarques.on('value', snapshot => {
+  embarques = snapshot.val() || {};
+  renderizarTablas();
+});
 
 const iconoOjoAbierto = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const iconoOjoCerrado = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
 function alternarPassword() {
-  const passInput = document.getElementById('login-password');
-  const btnOjo = document.getElementById('btn-ojo');
-  if (passInput.type === 'password') {
-    passInput.type = 'text';
-    btnOjo.innerHTML = iconoOjoAbierto;
+  const p = document.getElementById('login-password');
+  const btn = document.getElementById('btn-ojo');
+  if (p.type === 'password') {
+    p.type = 'text';
+    btn.innerHTML = iconoOjoAbierto;
   } else {
-    passInput.type = 'password';
-    btnOjo.innerHTML = iconoOjoCerrado;
+    p.type = 'password';
+    btn.innerHTML = iconoOjoCerrado;
   }
 }
 
@@ -319,21 +352,37 @@ function ejecutarLogin() {
   }
 
   if (usuario === 'embarques' && pass === 'Ventas.864') {
-    usuarioActual = 'Embarques';
-    configurarPermisos('embarques');
+    iniciarSesion('Embarques', 'embarques');
   } else if (usuario === 'almacen' && pass === 'Almacen.69g') {
-    usuarioActual = 'Almacén';
-    configurarPermisos('almacen');
+    iniciarSesion('Almacén', 'almacen');
   } else {
     alert('Contraseña incorrecta.');
-    return;
   }
+}
+
+function iniciarSesion(nombreUsuario, rol) {
+  usuarioActual = nombreUsuario;
+  perfilActual = rol;
+  localStorage.setItem('posco_sesion_activa', JSON.stringify({ usuario: nombreUsuario, perfil: rol }));
 
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
   document.getElementById('user-display').textContent = usuarioActual;
+
+  configurarPermisos(rol);
   actualizarSelectClientes();
   renderizarTablas();
+}
+
+function verificarSesionGuardada() {
+  try {
+    const s = JSON.parse(localStorage.getItem('posco_sesion_activa') || '{}');
+    if (s.usuario && s.perfil) {
+      iniciarSesion(s.usuario, s.perfil);
+    }
+  } catch (e) {
+    console.error('Error al restaurar sesión:', e);
+  }
 }
 
 function configurarPermisos(perfil) {
@@ -370,7 +419,7 @@ function switchTab(tabId) {
   if (botonActivo) botonActivo.classList.add('active');
 }
 
-/* BUSCADOR DE DIRECCIÓN ESTILO MAPS/WAZE (Nominatim) */
+/* BUSCADOR GPS (Nominatim) */
 function buscarDireccionGPS(consulta) {
   clearTimeout(timeoutBusqueda);
   const lista = document.getElementById('sugerencias-gps');
@@ -385,7 +434,7 @@ function buscarDireccionGPS(consulta) {
       .then(res => res.json())
       .then(datos => {
         lista.innerHTML = '';
-        if (datos.length === 0) {
+        if (!datos.length) {
           lista.style.display = 'none';
           return;
         }
@@ -409,7 +458,6 @@ function buscarDireccionGPS(consulta) {
 function seleccionarDestino(nombreCompleto, destLat, destLon) {
   document.getElementById('cliente-direccion-input').value = nombreCompleto;
   document.getElementById('sugerencias-gps').style.display = 'none';
-
   document.getElementById('cliente-distancia').value = 'Calculando ruta...';
   document.getElementById('cliente-trayecto').value = '';
 
@@ -433,7 +481,7 @@ function seleccionarDestino(nombreCompleto, destLat, destLon) {
     });
 }
 
-function calcularHoraLimiteSalida(fechaEntrega, horaEntrega, horasTrayecto) {
+function calcularHoraLimite(fechaEntrega, horaEntrega, horasTrayecto) {
   const [year, month, day] = fechaEntrega.split('-').map(Number);
   const [h, m] = horaEntrega.split(':').map(Number);
   const fechaObj = new Date(year, month - 1, day, h, m);
@@ -446,7 +494,6 @@ function calcularHoraLimiteSalida(fechaEntrega, horaEntrega, horasTrayecto) {
   return { horaStr, fechaStr, timestamp: fechaObj.getTime() };
 }
 
-/* SEMÁFORO VISUAL LIMPIO SIN TEXTO DE COLOR */
 function evaluarSemaforo(item) {
   if (item.salidaReal) {
     return { clase: 'sem-gris', texto: 'Salida confirmada' };
@@ -456,8 +503,7 @@ function evaluarSemaforo(item) {
     return { clase: 'sem-azul', texto: 'En andén (Cargando)' };
   }
 
-  const ahora = new Date().getTime();
-  const diffMinutos = Math.round((item.limiteTimestamp - ahora) / (1000 * 60));
+  const diffMinutos = Math.round((item.limiteTimestamp - Date.now()) / (1000 * 60));
 
   if (diffMinutos <= 60) {
     return { clase: 'sem-rojo', texto: 'Crítico / Retraso' };
@@ -468,11 +514,12 @@ function evaluarSemaforo(item) {
   }
 }
 
-/* ACTUALIZAR SELECTOR DE CLIENTES EN FORMULARIO DE EMBARQUES */
 function actualizarSelectClientes() {
   const select = document.getElementById('envio-cliente');
+  if (!select) return;
   select.innerHTML = '<option value="">-- Selecciona un Cliente del Catálogo --</option>';
-  catalogoClientes.forEach(c => {
+  Object.keys(catalogoClientes).forEach(key => {
+    const c = catalogoClientes[key];
     const option = document.createElement('option');
     option.value = `${c.nombre}|${c.direccion}|${c.trayecto}`;
     option.textContent = `${c.nombre} (Destino: ${c.direccion.slice(0, 30)}... | Ruta: ${c.trayecto} hrs)`;
@@ -480,10 +527,10 @@ function actualizarSelectClientes() {
   });
 }
 
-/* GESTIÓN DE EMBARQUES (GUARDAR / EDITAR / ELIMINAR) */
+/* GUARDAR / EDITAR / ELIMINAR EMBARQUES EN LA NUBE */
 function guardarEnvio(e) {
   e.preventDefault();
-  const editIndex = parseInt(document.getElementById('envio-edit-index').value);
+  const key = document.getElementById('envio-edit-key').value;
   const delivery = document.getElementById('envio-delivery').value.trim();
   const [cliente, direccion, trayectoStr] = document.getElementById('envio-cliente').value.split('|');
   const trayecto = parseFloat(trayectoStr);
@@ -492,54 +539,43 @@ function guardarEnvio(e) {
   const horaEntrega = document.getElementById('envio-hora').value;
   const comentario = document.getElementById('envio-comentario').value.trim();
 
-  const limite = calcularHoraLimiteSalida(fechaEntrega, horaEntrega, trayecto);
+  const limite = calcularHoraLimite(fechaEntrega, horaEntrega, trayecto);
 
-  if (editIndex === -1) {
-    embarques.push({
-      delivery,
-      cliente,
-      direccion,
-      trayecto,
-      toneladas,
-      fechaEntrega,
-      horaEntrega,
-      comentario,
-      horaLimite: limite.horaStr,
-      fechaLimite: limite.fechaStr,
-      limiteTimestamp: limite.timestamp,
-      estado: 'Pendiente',
-      salidaReal: null,
-      fechaSalidaReal: null,
-      horaSalidaReal: null
-    });
-    alert('Solicitud de embarque registrada exitosamente.');
+  const datosEnvio = {
+    delivery,
+    cliente,
+    direccion,
+    trayecto,
+    toneladas,
+    fechaEntrega,
+    horaEntrega,
+    comentario,
+    horaLimite: limite.horaStr,
+    fechaLimite: limite.fechaStr,
+    limiteTimestamp: limite.timestamp,
+    estado: 'Pendiente',
+    salidaReal: null,
+    fechaSalidaReal: null,
+    horaSalidaReal: null
+  };
+
+  if (key) {
+    refEmbarques.child(key).update(datosEnvio);
+    alert('Embarque actualizado en la nube.');
   } else {
-    embarques[editIndex].delivery = delivery;
-    embarques[editIndex].cliente = cliente;
-    embarques[editIndex].direccion = direccion;
-    embarques[editIndex].trayecto = trayecto;
-    embarques[editIndex].toneladas = toneladas;
-    embarques[editIndex].fechaEntrega = fechaEntrega;
-    embarques[editIndex].horaEntrega = horaEntrega;
-    embarques[editIndex].comentario = comentario;
-    embarques[editIndex].horaLimite = limite.horaStr;
-    embarques[editIndex].fechaLimite = limite.fechaStr;
-    embarques[editIndex].limiteTimestamp = limite.timestamp;
-    alert('Embarque actualizado exitosamente.');
-    cancelarEdicionEnvio();
+    refEmbarques.push(datosEnvio);
+    alert('Embarque guardado en la nube.');
   }
 
-  persistirDatos();
-  document.getElementById('form-envio').reset();
-  renderizarTablas();
+  cancelarEdicionEnvio();
   switchTab('general');
 }
 
-function editarEnvio(index) {
-  const item = embarques[index];
-  document.getElementById('envio-edit-index').value = index;
+function editarEnvio(key) {
+  const item = embarques[key];
+  document.getElementById('envio-edit-key').value = key;
   document.getElementById('envio-delivery').value = item.delivery;
-  
+
   const select = document.getElementById('envio-cliente');
   for (let i = 0; i < select.options.length; i++) {
     if (select.options[i].value.startsWith(item.cliente + '|')) {
@@ -562,7 +598,7 @@ function editarEnvio(index) {
 }
 
 function cancelarEdicionEnvio() {
-  document.getElementById('envio-edit-index').value = '-1';
+  document.getElementById('envio-edit-key').value = '';
   document.getElementById('form-envio').reset();
   document.getElementById('titulo-form-envio').textContent = 'Nueva Solicitud de Embarque';
   document.getElementById('btn-submit-envio').textContent = 'Programar Solicitud de Embarque';
@@ -570,261 +606,32 @@ function cancelarEdicionEnvio() {
   document.getElementById('btn-cancel-envio').style.display = 'none';
 }
 
-function eliminarEnvio(index) {
-  const item = embarques[index];
-  if (confirm(`¿Estás seguro de eliminar el embarque con Delivery "${item.delivery}"?`)) {
-    embarques.splice(index, 1);
-    persistirDatos();
-    renderizarTablas();
-    alert('Embarque eliminado.');
+function eliminarEnvio(key) {
+  const item = embarques[key];
+  if (confirm(`¿Estás seguro de eliminar el embarque "${item.delivery}" de la base de datos?`)) {
+    refEmbarques.child(key).remove();
   }
 }
 
-/* GESTIÓN DE CLIENTES (GUARDAR / EDITAR / ELIMINAR) */
+/* GUARDAR / EDITAR / ELIMINAR CLIENTES EN LA NUBE */
 function guardarCliente(e) {
   e.preventDefault();
-  const editIndex = parseInt(document.getElementById('cliente-edit-index').value);
+  const key = document.getElementById('cliente-edit-key').value;
   const nombre = document.getElementById('cliente-nombre').value.trim();
   const direccion = document.getElementById('cliente-direccion-input').value.trim();
   const trayecto = parseFloat(document.getElementById('cliente-trayecto').value);
 
-  if (editIndex === -1) {
-    catalogoClientes.push({ nombre, direccion, trayecto });
-    alert('Cliente y destino agregados al catálogo.');
+  const datosCliente = { nombre, direccion, trayecto };
+
+  if (key) {
+    refClientes.child(key).update(datosCliente);
+    alert('Cliente actualizado en la nube.');
   } else {
-    catalogoClientes[editIndex].nombre = nombre;
-    catalogoClientes[editIndex].direccion = direccion;
-    catalogoClientes[editIndex].trayecto = trayecto;
-    alert('Cliente actualizado en el catálogo.');
-    cancelarEdicionCliente();
+    refClientes.push(datosCliente);
+    alert('Cliente agregado al catálogo en la nube.');
   }
 
-  persistirDatos();
-  document.getElementById('form-cliente').reset();
-  document.getElementById('cliente-distancia').value = '';
-  actualizarSelectClientes();
-  renderizarTablaClientes();
+  cancelarEdicionCliente();
 }
 
-function editarCliente(index) {
-  const c = catalogoClientes[index];
-  document.getElementById('cliente-edit-index').value = index;
-  document.getElementById('cliente-nombre').value = c.nombre;
-  document.getElementById('cliente-direccion-input').value = c.direccion;
-  document.getElementById('cliente-trayecto').value = c.trayecto;
-  document.getElementById('cliente-distancia').value = 'Ruta guardada previamente';
-
-  document.getElementById('titulo-form-cliente').textContent = `✏️ Modificar Cliente (${c.nombre})`;
-  document.getElementById('btn-submit-cliente').textContent = 'Guardar Cambios del Cliente';
-  document.getElementById('btn-submit-cliente').style.background = '#f59e0b';
-  document.getElementById('btn-cancel-cliente').style.display = 'block';
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function cancelarEdicionCliente() {
-  document.getElementById('cliente-edit-index').value = '-1';
-  document.getElementById('form-cliente').reset();
-  document.getElementById('cliente-distancia').value = '';
-  document.getElementById('titulo-form-cliente').textContent = 'Alta de Cliente con Cálculo de Ruta (Maps / GPS)';
-  document.getElementById('btn-submit-cliente').textContent = 'Guardar Cliente en Catálogo';
-  document.getElementById('btn-submit-cliente').style.background = '#0284c7';
-  document.getElementById('btn-cancel-cliente').style.display = 'none';
-}
-
-function eliminarCliente(index) {
-  const c = catalogoClientes[index];
-  if (confirm(`¿Estás seguro de eliminar al cliente "${c.nombre}" del catálogo?`)) {
-    catalogoClientes.splice(index, 1);
-    persistirDatos();
-    actualizarSelectClientes();
-    renderizarTablaClientes();
-    alert('Cliente eliminado del catálogo.');
-  }
-}
-
-function renderizarTablaClientes() {
-  const tbody = document.getElementById('tabla-clientes-cuerpo');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-
-  catalogoClientes.forEach((c, index) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><b>${c.nombre}</b></td>
-      <td>${c.direccion}</td>
-      <td><b>${c.trayecto} hrs</b></td>
-      <td>
-        <button class="btn-edit" onclick="editarCliente(${index})">✏️ Editar</button>
-        <button class="btn-delete" onclick="eliminarCliente(${index})">🗑️ Borrar</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function cambiarEstadoAnden(index) {
-  if (embarques[index].estado === 'En Andén') {
-    embarques[index].estado = 'Pendiente';
-  } else {
-    embarques[index].estado = 'En Andén';
-  }
-  persistirDatos();
-  renderizarTablas();
-}
-
-function confirmarSalida(index) {
-  const ahora = new Date();
-  const anio = ahora.getFullYear();
-  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
-  const dia = String(ahora.getDate()).padStart(2, '0');
-  const fechaISO = `${anio}-${mes}-${dia}`;
-  const horaStr = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-  embarques[index].salidaReal = `${fechaISO} ${horaStr}`;
-  embarques[index].fechaSalidaReal = fechaISO;
-  embarques[index].horaSalidaReal = horaStr;
-  embarques[index].estado = 'Confirmada';
-  persistirDatos();
-  renderizarTablas();
-}
-
-function filtrarConfirmadasPorFecha() {
-  fechaFiltroSeleccionada = document.getElementById('filtro-fecha-salida').value;
-  renderizarTablas();
-}
-
-function limpiarFiltroFecha() {
-  fechaFiltroSeleccionada = '';
-  document.getElementById('filtro-fecha-salida').value = '';
-  renderizarTablas();
-}
-
-function renderizarTablas() {
-  const tbodyGeneral = document.getElementById('tabla-general-cuerpo');
-  const tbodySalidasPendientes = document.getElementById('tabla-salidas-pendientes-cuerpo');
-  const tbodySalidasConfirmadas = document.getElementById('tabla-salidas-confirmadas-cuerpo');
-
-  if (tbodyGeneral) tbodyGeneral.innerHTML = '';
-  if (tbodySalidasPendientes) tbodySalidasPendientes.innerHTML = '';
-  if (tbodySalidasConfirmadas) tbodySalidasConfirmadas.innerHTML = '';
-
-  renderizarTablaClientes();
-
-  embarques.forEach((item, index) => {
-    const semaforo = evaluarSemaforo(item);
-
-    // 1. Vista Embarques: Historial General con botones de Editar y Eliminar
-    if (tbodyGeneral) {
-      const trGen = document.createElement('tr');
-      trGen.innerHTML = `
-        <td><b>${item.delivery}</b></td>
-        <td><b>${item.cliente}</b><br><small style="color:#64748b">${item.direccion}</small></td>
-        <td>${item.toneladas} Tn</td>
-        <td>${item.fechaEntrega}</td>
-        <td>${item.horaEntrega} hrs</td>
-        <td><b>${item.horaLimite} hrs</b> (${item.fechaLimite})</td>
-        <td>
-          <span class="semaforo-dot ${semaforo.clase}">
-            <span class="dot"></span> ${semaforo.texto}
-          </span>
-        </td>
-        <td>${item.salidaReal ? item.salidaReal : 'En Patio'}</td>
-        <td>
-          <button class="btn-edit" onclick="editarEnvio(${index})">✏️ Editar</button>
-          <button class="btn-delete" onclick="eliminarEnvio(${index})">🗑️ Borrar</button>
-        </td>
-      `;
-      tbodyGeneral.appendChild(trGen);
-    }
-
-    // 2. Vista Almacén: Confirmación de Salida (SIN botones de editar/eliminar)
-    if (!item.salidaReal && tbodySalidasPendientes) {
-      const trPend = document.createElement('tr');
-      const esAnden = item.estado === 'En Andén';
-      trPend.innerHTML = `
-        <td><b>${item.delivery}</b></td>
-        <td><b>${item.cliente}</b><br><small style="color:#64748b">${item.direccion}</small></td>
-        <td>${item.toneladas} Tn</td>
-        <td><b>${item.horaLimite} hrs</b><br><small>${item.fechaLimite}</small></td>
-        <td>
-          <span class="semaforo-dot ${semaforo.clase}">
-            <span class="dot"></span> ${semaforo.texto}
-          </span>
-        </td>
-        <td>
-          <button class="btn-anden" onclick="cambiarEstadoAnden(${index})">${esAnden ? '↩ Pasar a Pendiente' : '🚚 Pasar a Andén'}</button>
-          <button class="btn-confirmar" onclick="confirmarSalida(${index})">Confirmar Salida</button>
-        </td>
-      `;
-      tbodySalidasPendientes.appendChild(trPend);
-    }
-
-    // 3. Vista Almacén: Historial de Confirmaciones (Filtrable por Fecha)
-    if (item.salidaReal && tbodySalidasConfirmadas) {
-      if (fechaFiltroSeleccionada && item.fechaSalidaReal !== fechaFiltroSeleccionada) {
-        return;
-      }
-
-      const trConf = document.createElement('tr');
-      trConf.innerHTML = `
-        <td><b>${item.delivery}</b></td>
-        <td><b>${item.cliente}</b></td>
-        <td>${item.direccion}</td>
-        <td>${item.toneladas} Tn</td>
-        <td>${item.fechaEntrega} - ${item.horaEntrega} hrs</td>
-        <td>${item.horaLimite} hrs (${item.fechaLimite})</td>
-        <td>
-          <span class="semaforo-dot ${semaforo.clase}">
-            <span class="dot"></span> ${semaforo.texto}
-          </span>
-        </td>
-        <td><b style="color:#059669">${item.salidaReal}</b></td>
-      `;
-      tbodySalidasConfirmadas.appendChild(trConf);
-    }
-  });
-}
-
-function descargarReporteSalidas() {
-  let confirmadas = embarques.filter(e => e.salidaReal !== null);
-  
-  if (fechaFiltroSeleccionada) {
-    confirmadas = confirmadas.filter(e => e.fechaSalidaReal === fechaFiltroSeleccionada);
-  }
-
-  if (confirmadas.length === 0) {
-    alert('No hay unidades confirmadas en la fecha seleccionada.');
-    return;
-  }
-
-  let csvContent = '\uFEFF';
-  csvContent += 'Delivery,Cliente,Direccion Destino,Toneladas,Fecha Entrega,Hora Entrega,Salida Limite,Estado,Fecha y Hora Salida Real\n';
-
-  confirmadas.forEach(e => {
-    csvContent += `"${e.delivery}","${e.cliente}","${e.direccion}","${e.toneladas}","${e.fechaEntrega}","${e.horaEntrega}","${e.horaLimite}","Salida Confirmada","${e.salidaReal}"\n`;
-  });
-
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  const url = URL.createObjectURL(blob);
-  link.setAttribute('href', url);
-  const sufijoFecha = fechaFiltroSeleccionada ? `_${fechaFiltroSeleccionada}` : `_${new Date().toISOString().slice(0, 10)}`;
-  link.setAttribute('download', `Salidas_Confirmadas_POSCO${sufijoFecha}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
-setInterval(renderizarTablas, 10000);
-
-function logout() {
-  usuarioActual = '';
-  document.getElementById('login-usuario').value = '';
-  document.getElementById('login-password').value = '';
-  document.getElementById('app-content').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'block';
-}
-</script>
-</body>
-</html>
+function editarCliente(key) {
