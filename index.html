@@ -34,7 +34,10 @@ input, select, textarea { padding: 10px; border: 1px solid #cbd5e1; border-radiu
 button { border: none; padding: 11px; cursor: pointer; font-weight: bold; border-radius: 4px; }
 .btn-submit { background: #10b981; color: white; font-size: 15px; }
 
-/* Botones y filtros */
+/* Botones de acción */
+.btn-edit { background: #f59e0b; color: white; padding: 5px 8px; font-size: 11px; border-radius: 4px; margin-right: 4px; cursor: pointer; }
+.btn-delete { background: #ef4444; color: white; padding: 5px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
+.btn-cancel { background: #64748b; color: white; padding: 10px; font-size: 14px; border-radius: 4px; cursor: pointer; display: none; }
 .btn-anden { background: #0284c7; color: white; padding: 6px 10px; font-size: 12px; border-radius: 4px; margin-bottom: 4px; display: block; width: 100%; }
 .btn-confirmar { background: #059669; color: white; padding: 6px 10px; font-size: 12px; border-radius: 4px; display: block; width: 100%; font-weight: bold; }
 .btn-descargar { background: #1e293b; color: white; padding: 8px 14px; border-radius: 4px; font-size: 13px; cursor: pointer; }
@@ -42,7 +45,7 @@ button { border: none; padding: 11px; cursor: pointer; font-weight: bold; border
 .filter-bar label { font-size: 13px; font-weight: bold; }
 .filter-bar input[type="date"] { padding: 6px 10px; font-size: 13px; }
 
-/* Buscador de mapa integrado */
+/* Buscador GPS */
 .search-container { position: relative; width: 100%; }
 .suggestions-list { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e1; border-radius: 0 0 4px 4px; max-height: 200px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); list-style: none; padding: 0; margin: 0; display: none; }
 .suggestions-list li { padding: 10px 12px; cursor: pointer; font-size: 13px; border-bottom: 1px solid #f1f5f9; }
@@ -108,7 +111,7 @@ th { background-color: #0284c7; color: white; }
     <!-- Oficina -->
     <button id="btn-tab-envios" class="tab-btn" onclick="switchTab('envios')">1. Solicitud de Embarque</button>
     <button id="btn-tab-general" class="tab-btn" onclick="switchTab('general')">2. Historial de Carga</button>
-    <button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Alta de Clientes (GPS/Ruta)</button>
+    <button id="btn-tab-clientes" class="tab-btn" onclick="switchTab('clientes')">3. Catálogo de Clientes (GPS)</button>
     
     <!-- Salidas -->
     <button id="btn-tab-salidas" class="tab-btn" onclick="switchTab('salidas')">1. Confirmación de Salida ⏱️</button>
@@ -117,17 +120,16 @@ th { background-color: #0284c7; color: white; }
 
   <!-- OFICINA 1: SOLICITUD DE EMBARQUE -->
   <div id="panel-envios" class="panel">
-    <h3>Nueva Solicitud de Embarque</h3>
-    <form id="form-envio" class="app-form" onsubmit="registrarEnvio(event)">
+    <h3 id="titulo-form-envio">Nueva Solicitud de Embarque</h3>
+    <form id="form-envio" class="app-form" onsubmit="guardarEnvio(event)">
+      <input type="hidden" id="envio-edit-index" value="-1">
+
       <label for="envio-delivery"><b>Folio Delivery:</b></label>
       <input type="text" id="envio-delivery" placeholder="Ej: DEL-5001" required>
 
       <label for="envio-cliente"><b>Cliente y Destino:</b></label>
       <select id="envio-cliente" required>
         <option value="">-- Selecciona un Cliente del Catálogo --</option>
-        <option value="Mabe Saltillo|Saltillo, Coahuila|4.0">Mabe Saltillo (Destino: Saltillo | Ruta: 4.0 hrs)</option>
-        <option value="Stellantis Toluca|Toluca, Edo. Méx.|4.5">Stellantis (Destino: Toluca | Ruta: 4.5 hrs)</option>
-        <option value="DN Automotive SLP|Villa de Reyes, SLP|0.7">DN Automotive (Destino: Villa de Reyes | Ruta: 0.7 hrs)</option>
       </select>
 
       <label for="envio-toneladas"><b>Toneladas:</b></label>
@@ -142,7 +144,8 @@ th { background-color: #0284c7; color: white; }
       <label for="envio-comentario"><b>Comentarios u observaciones:</b></label>
       <textarea id="envio-comentario" placeholder="Detalles de carga o producto..."></textarea>
       
-      <button type="submit" class="btn-submit">Programar Solicitud de Embarque</button>
+      <button type="submit" id="btn-submit-envio" class="btn-submit">Programar Solicitud de Embarque</button>
+      <button type="button" id="btn-cancel-envio" class="btn-cancel" onclick="cancelarEdicionEnvio()">Cancelar Edición</button>
     </form>
   </div>
 
@@ -161,6 +164,7 @@ th { background-color: #0284c7; color: white; }
             <th>Salida Límite Sugerida</th>
             <th>Semáforo</th>
             <th>Salida Real Caseta</th>
+            <th style="width: 130px;">Acciones</th>
           </tr>
         </thead>
         <tbody id="tabla-general-cuerpo"></tbody>
@@ -168,12 +172,14 @@ th { background-color: #0284c7; color: white; }
     </div>
   </div>
 
-  <!-- OFICINA 3: ALTA DE CLIENTES CON BUSCADOR GPS -->
+  <!-- OFICINA 3: ALTA Y EDICIÓN DE CLIENTES CON BUSCADOR GPS -->
   <div id="panel-clientes" class="panel">
-    <h3>Alta de Clientes con Cálculo de Ruta (Maps / GPS)</h3>
-    <p style="font-size: 13px; color: #555;">Busca la dirección o ciudad como en Google Maps/Waze. El tiempo de viaje por carretera desde POSCO SLP se calcula automáticamente.</p>
+    <h3 id="titulo-form-cliente">Alta de Cliente con Cálculo de Ruta (Maps / GPS)</h3>
+    <p style="font-size: 13px; color: #555;">Busca la dirección o parque industrial. La distancia y horas por carretera desde POSCO SLP se calculan automáticamente.</p>
     
-    <form id="form-cliente" class="app-form" onsubmit="registrarCliente(event)">
+    <form id="form-cliente" class="app-form" onsubmit="guardarCliente(event)">
+      <input type="hidden" id="cliente-edit-index" value="-1">
+
       <label for="cliente-nombre"><b>Nombre del Cliente / Empresa:</b></label>
       <input type="text" id="cliente-nombre" placeholder="Ej: Mabe Saltillo" required>
 
@@ -186,16 +192,32 @@ th { background-color: #0284c7; color: white; }
       <div style="display: flex; gap: 10px;">
         <div style="flex: 1;">
           <label><b>Distancia por Carretera:</b></label>
-          <input type="text" id="cliente-distancia" placeholder="Calculando..." readonly style="background:#f8fafc;">
+          <input type="text" id="cliente-distancia" placeholder="Distancia calculada..." readonly style="background:#f8fafc;">
         </div>
         <div style="flex: 1;">
           <label><b>Tiempo de Ruta (Horas):</b></label>
-          <input type="number" id="cliente-trayecto" step="0.1" placeholder="Calculando..." required>
+          <input type="number" id="cliente-trayecto" step="0.1" placeholder="Ej: 4.0" required>
         </div>
       </div>
 
-      <button type="submit" class="btn-submit" style="background:#0284c7;">Guardar Cliente en Catálogo</button>
+      <button type="submit" id="btn-submit-cliente" class="btn-submit" style="background:#0284c7;">Guardar Cliente en Catálogo</button>
+      <button type="button" id="btn-cancel-cliente" class="btn-cancel" onclick="cancelarEdicionCliente()">Cancelar Edición</button>
     </form>
+
+    <h3>Catálogo de Clientes Registrados</h3>
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Dirección de Destino</th>
+            <th>Tiempo Ruta (Horas)</th>
+            <th style="width: 130px;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-clientes-cuerpo"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- SALIDAS 1: CONFIRMACIÓN DE SALIDA DE EMBARQUE -->
@@ -251,8 +273,14 @@ th { background-color: #0284c7; color: white; }
 </div>
 
 <script>
-// Coordenadas fijas de POSCO MPPC San Luis Potosí (Zona Industrial WTC)
 const ORIGEN_POSCO = { lat: 22.0833, lon: -100.8667 };
+
+// Catálogo inicial de clientes
+let catalogoClientes = [
+  { nombre: "Mabe Saltillo", direccion: "Blvd. Isidro López Zertuche, Saltillo, Coahuila", trayecto: 4.0 },
+  { nombre: "Stellantis Toluca", direccion: "Av. Industria Automotriz, Toluca, Edo. Méx.", trayecto: 4.5 },
+  { nombre: "DN Automotive SLP", direccion: "Parque Industrial Logistik, Villa de Reyes, SLP", trayecto: 0.7 }
+];
 
 let embarques = [];
 let usuarioActual = '';
@@ -294,6 +322,7 @@ function ejecutarLogin() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-content').style.display = 'block';
   document.getElementById('user-display').textContent = usuarioActual;
+  actualizarSelectClientes();
   renderizarTablas();
 }
 
@@ -331,7 +360,7 @@ function switchTab(tabId) {
   if (botonActivo) botonActivo.classList.add('active');
 }
 
-/* BUSCADOR DE DIRECCIÓN ESTILO MAPS/WAZE (OpenStreetMap Nominatim) */
+/* BUSCADOR DE DIRECCIÓN ESTILO MAPS/WAZE (Nominatim) */
 function buscarDireccionGPS(consulta) {
   clearTimeout(timeoutBusqueda);
   const lista = document.getElementById('sugerencias-gps');
@@ -366,7 +395,7 @@ function buscarDireccionGPS(consulta) {
   }, 350);
 }
 
-/* CÁLCULO DE RUTA EN TIEMPO REAL DESDE POSCO MPPC SLP (OSRM Routing Engine) */
+/* CÁLCULO DE RUTA EN TIEMPO REAL DESDE POSCO MPPC SLP (OSRM) */
 function seleccionarDestino(nombreCompleto, destLat, destLon) {
   document.getElementById('cliente-direccion-input').value = nombreCompleto;
   document.getElementById('sugerencias-gps').style.display = 'none';
@@ -381,7 +410,6 @@ function seleccionarDestino(nombreCompleto, destLat, destLon) {
     .then(datos => {
       if (datos.routes && datos.routes.length > 0) {
         const distanciaKm = (datos.routes[0].distance / 1000).toFixed(1);
-        // Duración en segundos convertida a horas con 1 decimal
         const horasRuta = (datos.routes[0].duration / 3600).toFixed(1);
 
         document.getElementById('cliente-distancia').value = `${distanciaKm} km`;
@@ -408,7 +436,7 @@ function calcularHoraLimiteSalida(fechaEntrega, horaEntrega, horasTrayecto) {
   return { horaStr, fechaStr, timestamp: fechaObj.getTime() };
 }
 
-/* SEMÁFORO VISUAL LIMPIO (SIN NOMBRE DEL COLOR EN TEXTO) */
+/* SEMÁFORO VISUAL LIMPIO SIN TEXTO DE COLOR */
 function evaluarSemaforo(item) {
   if (item.salidaReal) {
     return { clase: 'sem-gris', texto: 'Salida confirmada' };
@@ -430,56 +458,198 @@ function evaluarSemaforo(item) {
   }
 }
 
-function registrarEnvio(e) {
+/* ACTUALIZAR SELECTOR DE CLIENTES EN FORMULARIO DE EMBARQUES */
+function actualizarSelectClientes() {
+  const select = document.getElementById('envio-cliente');
+  select.innerHTML = '<option value="">-- Selecciona un Cliente del Catálogo --</option>';
+  catalogoClientes.forEach(c => {
+    const option = document.createElement('option');
+    option.value = `${c.nombre}|${c.direccion}|${c.trayecto}`;
+    option.textContent = `${c.nombre} (Destino: ${c.direccion.slice(0, 30)}... | Ruta: ${c.trayecto} hrs)`;
+    select.appendChild(option);
+  });
+}
+
+/* GESTIÓN DE EMBARQUES (GUARDAR / EDITAR / ELIMINAR) */
+function guardarEnvio(e) {
   e.preventDefault();
+  const editIndex = parseInt(document.getElementById('envio-edit-index').value);
   const delivery = document.getElementById('envio-delivery').value.trim();
   const [cliente, direccion, trayectoStr] = document.getElementById('envio-cliente').value.split('|');
   const trayecto = parseFloat(trayectoStr);
   const toneladas = document.getElementById('envio-toneladas').value;
   const fechaEntrega = document.getElementById('envio-fecha').value;
   const horaEntrega = document.getElementById('envio-hora').value;
+  const comentario = document.getElementById('envio-comentario').value.trim();
 
   const limite = calcularHoraLimiteSalida(fechaEntrega, horaEntrega, trayecto);
 
-  embarques.push({
-    delivery,
-    cliente,
-    direccion,
-    trayecto,
-    toneladas,
-    fechaEntrega,
-    horaEntrega,
-    horaLimite: limite.horaStr,
-    fechaLimite: limite.fechaStr,
-    limiteTimestamp: limite.timestamp,
-    estado: 'Pendiente',
-    salidaReal: null,
-    fechaSalidaReal: null,
-    horaSalidaReal: null
-  });
+  if (editIndex === -1) {
+    // Nuevo registro
+    embarques.push({
+      delivery,
+      cliente,
+      direccion,
+      trayecto,
+      toneladas,
+      fechaEntrega,
+      horaEntrega,
+      comentario,
+      horaLimite: limite.horaStr,
+      fechaLimite: limite.fechaStr,
+      limiteTimestamp: limite.timestamp,
+      estado: 'Pendiente',
+      salidaReal: null,
+      fechaSalidaReal: null,
+      horaSalidaReal: null
+    });
+    alert('Solicitud de embarque registrada exitosamente.');
+  } else {
+    // Edición de embarque existente
+    embarques[editIndex].delivery = delivery;
+    embarques[editIndex].cliente = cliente;
+    embarques[editIndex].direccion = direccion;
+    embarques[editIndex].trayecto = trayecto;
+    embarques[editIndex].toneladas = toneladas;
+    embarques[editIndex].fechaEntrega = fechaEntrega;
+    embarques[editIndex].horaEntrega = horaEntrega;
+    embarques[editIndex].comentario = comentario;
+    embarques[editIndex].horaLimite = limite.horaStr;
+    embarques[editIndex].fechaLimite = limite.fechaStr;
+    embarques[editIndex].limiteTimestamp = limite.timestamp;
+    alert('Embarque actualizado exitosamente.');
+    cancelarEdicionEnvio();
+  }
 
   document.getElementById('form-envio').reset();
   renderizarTablas();
-  alert('Solicitud de embarque registrada exitosamente.');
   switchTab('general');
 }
 
-function registrarCliente(e) {
+function editarEnvio(index) {
+  const item = embarques[index];
+  document.getElementById('envio-edit-index').value = index;
+  document.getElementById('envio-delivery').value = item.delivery;
+  
+  // Buscar opción cliente correspondiente
+  const select = document.getElementById('envio-cliente');
+  for (let i = 0; i < select.options.length; i++) {
+    if (select.options[i].value.startsWith(item.cliente + '|')) {
+      select.selectedIndex = i;
+      break;
+    }
+  }
+
+  document.getElementById('envio-toneladas').value = item.toneladas;
+  document.getElementById('envio-fecha').value = item.fechaEntrega;
+  document.getElementById('envio-hora').value = item.horaEntrega;
+  document.getElementById('envio-comentario').value = item.comentario || '';
+
+  document.getElementById('titulo-form-envio').textContent = `✏️ Modificar Embarque (${item.delivery})`;
+  document.getElementById('btn-submit-envio').textContent = 'Guardar Cambios del Embarque';
+  document.getElementById('btn-submit-envio').style.background = '#f59e0b';
+  document.getElementById('btn-cancel-envio').style.display = 'block';
+
+  switchTab('envios');
+}
+
+function cancelarEdicionEnvio() {
+  document.getElementById('envio-edit-index').value = '-1';
+  document.getElementById('form-envio').reset();
+  document.getElementById('titulo-form-envio').textContent = 'Nueva Solicitud de Embarque';
+  document.getElementById('btn-submit-envio').textContent = 'Programar Solicitud de Embarque';
+  document.getElementById('btn-submit-envio').style.background = '#10b981';
+  document.getElementById('btn-cancel-envio').style.display = 'none';
+}
+
+function eliminarEnvio(index) {
+  const item = embarques[index];
+  if (confirm(`¿Estás seguro de eliminar el embarque con Delivery "${item.delivery}"?`)) {
+    embarques.splice(index, 1);
+    renderizarTablas();
+    alert('Embarque eliminado.');
+  }
+}
+
+/* GESTIÓN DE CLIENTES (GUARDAR / EDITAR / ELIMINAR) */
+function guardarCliente(e) {
   e.preventDefault();
+  const editIndex = parseInt(document.getElementById('cliente-edit-index').value);
   const nombre = document.getElementById('cliente-nombre').value.trim();
   const direccion = document.getElementById('cliente-direccion-input').value.trim();
-  const trayecto = document.getElementById('cliente-trayecto').value;
+  const trayecto = parseFloat(document.getElementById('cliente-trayecto').value);
 
-  const select = document.getElementById('envio-cliente');
-  const option = document.createElement('option');
-  option.value = `${nombre}|${direccion}|${trayecto}`;
-  option.textContent = `${nombre} (Destino: ${direccion.slice(0, 35)}... | Ruta: ${trayecto} hrs)`;
-  select.appendChild(option);
+  if (editIndex === -1) {
+    catalogoClientes.push({ nombre, direccion, trayecto });
+    alert('Cliente y destino agregados al catálogo.');
+  } else {
+    catalogoClientes[editIndex].nombre = nombre;
+    catalogoClientes[editIndex].direccion = direccion;
+    catalogoClientes[editIndex].trayecto = trayecto;
+    alert('Cliente actualizado en el catálogo.');
+    cancelarEdicionCliente();
+  }
 
   document.getElementById('form-cliente').reset();
   document.getElementById('cliente-distancia').value = '';
-  alert('Nuevo cliente y ruta GPS guardados en catálogo.');
-  switchTab('envios');
+  actualizarSelectClientes();
+  renderizarTablaClientes();
+}
+
+function editarCliente(index) {
+  const c = catalogoClientes[index];
+  document.getElementById('cliente-edit-index').value = index;
+  document.getElementById('cliente-nombre').value = c.nombre;
+  document.getElementById('cliente-direccion-input').value = c.direccion;
+  document.getElementById('cliente-trayecto').value = c.trayecto;
+  document.getElementById('cliente-distancia').value = 'Ruta guardada previamente';
+
+  document.getElementById('titulo-form-cliente').textContent = `✏️ Modificar Cliente (${c.nombre})`;
+  document.getElementById('btn-submit-cliente').textContent = 'Guardar Cambios del Cliente';
+  document.getElementById('btn-submit-cliente').style.background = '#f59e0b';
+  document.getElementById('btn-cancel-cliente').style.display = 'block';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelarEdicionCliente() {
+  document.getElementById('cliente-edit-index').value = '-1';
+  document.getElementById('form-cliente').reset();
+  document.getElementById('cliente-distancia').value = '';
+  document.getElementById('titulo-form-cliente').textContent = 'Alta de Cliente con Cálculo de Ruta (Maps / GPS)';
+  document.getElementById('btn-submit-cliente').textContent = 'Guardar Cliente en Catálogo';
+  document.getElementById('btn-submit-cliente').style.background = '#0284c7';
+  document.getElementById('btn-cancel-cliente').style.display = 'none';
+}
+
+function eliminarCliente(index) {
+  const c = catalogoClientes[index];
+  if (confirm(`¿Estás seguro de eliminar al cliente "${c.nombre}" del catálogo?`)) {
+    catalogoClientes.splice(index, 1);
+    actualizarSelectClientes();
+    renderizarTablaClientes();
+    alert('Cliente eliminado del catálogo.');
+  }
+}
+
+function renderizarTablaClientes() {
+  const tbody = document.getElementById('tabla-clientes-cuerpo');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  catalogoClientes.forEach((c, index) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><b>${c.nombre}</b></td>
+      <td>${c.direccion}</td>
+      <td><b>${c.trayecto} hrs</b></td>
+      <td>
+        <button class="btn-edit" onclick="editarCliente(${index})">✏️ Editar</button>
+        <button class="btn-delete" onclick="eliminarCliente(${index})">🗑️ Borrar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
 }
 
 function cambiarEstadoAnden(index) {
@@ -526,10 +696,12 @@ function renderizarTablas() {
   if (tbodySalidasPendientes) tbodySalidasPendientes.innerHTML = '';
   if (tbodySalidasConfirmadas) tbodySalidasConfirmadas.innerHTML = '';
 
+  renderizarTablaClientes();
+
   embarques.forEach((item, index) => {
     const semaforo = evaluarSemaforo(item);
 
-    // 1. Vista Oficina: Historial General de Carga
+    // 1. Vista Oficina: Historial General con botones de Editar y Eliminar
     if (tbodyGeneral) {
       const trGen = document.createElement('tr');
       trGen.innerHTML = `
@@ -545,11 +717,15 @@ function renderizarTablas() {
           </span>
         </td>
         <td>${item.salidaReal ? item.salidaReal : 'En Patio'}</td>
+        <td>
+          <button class="btn-edit" onclick="editarEnvio(${index})">✏️ Editar</button>
+          <button class="btn-delete" onclick="eliminarEnvio(${index})">🗑️ Borrar</button>
+        </td>
       `;
       tbodyGeneral.appendChild(trGen);
     }
 
-    // 2. Vista Salidas: Confirmación de Salida (Pendientes y En Andén)
+    // 2. Vista Salidas: Confirmación de Salida (SIN botones de editar/eliminar)
     if (!item.salidaReal && tbodySalidasPendientes) {
       const trPend = document.createElement('tr');
       const esAnden = item.estado === 'En Andén';
