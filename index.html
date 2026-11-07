@@ -635,3 +635,212 @@ function guardarCliente(e) {
 }
 
 function editarCliente(key) {
+  const c = catalogoClientes[key];
+  document.getElementById('cliente-edit-key').value = key;
+  document.getElementById('cliente-nombre').value = c.nombre;
+  document.getElementById('cliente-direccion-input').value = c.direccion;
+  document.getElementById('cliente-trayecto').value = c.trayecto;
+  document.getElementById('cliente-distancia').value = 'Ruta guardada previamente';
+
+  document.getElementById('titulo-form-cliente').textContent = `✏️ Modificar Cliente (${c.nombre})`;
+  document.getElementById('btn-submit-cliente').textContent = 'Guardar Cambios del Cliente';
+  document.getElementById('btn-submit-cliente').style.background = '#f59e0b';
+  document.getElementById('btn-cancel-cliente').style.display = 'block';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function cancelarEdicionCliente() {
+  document.getElementById('cliente-edit-key').value = '';
+  document.getElementById('form-cliente').reset();
+  document.getElementById('cliente-distancia').value = '';
+  document.getElementById('titulo-form-cliente').textContent = 'Alta de Cliente con Cálculo de Ruta (Maps / GPS)';
+  document.getElementById('btn-submit-cliente').textContent = 'Guardar Cliente en Catálogo';
+  document.getElementById('btn-submit-cliente').style.background = '#0284c7';
+  document.getElementById('btn-cancel-cliente').style.display = 'none';
+}
+
+function eliminarCliente(key) {
+  const c = catalogoClientes[key];
+  if (confirm(`¿Estás seguro de eliminar al cliente "${c.nombre}" del catálogo en la nube?`)) {
+    refClientes.child(key).remove();
+  }
+}
+
+function renderizarTablaClientes() {
+  const tbody = document.getElementById('tabla-clientes-cuerpo');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  Object.keys(catalogoClientes).forEach(key => {
+    const c = catalogoClientes[key];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><b>${c.nombre}</b></td>
+      <td>${c.direccion}</td>
+      <td><b>${c.trayecto} hrs</b></td>
+      <td>
+        <button class="btn-edit" onclick="editarCliente('${key}')">✏️ Editar</button>
+        <button class="btn-delete" onclick="eliminarCliente('${key}')">🗑️ Borrar</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function cambiarEstadoAnden(key) {
+  const item = embarques[key];
+  const nuevoEstado = item.estado === 'En Andén' ? 'Pendiente' : 'En Andén';
+  refEmbarques.child(key).update({ estado: nuevoEstado });
+}
+
+function confirmarSalida(key) {
+  const ahora = new Date();
+  const anio = ahora.getFullYear();
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  const fechaISO = `${anio}-${mes}-${dia}`;
+  const horaStr = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  refEmbarques.child(key).update({
+    salidaReal: `${fechaISO} ${horaStr}`,
+    fechaSalidaReal: fechaISO,
+    horaSalidaReal: horaStr,
+    estado: 'Confirmada'
+  });
+}
+
+function renderizarTablas() {
+  const tbodyGeneral = document.getElementById('tabla-general-cuerpo');
+  const tbodySalidasPendientes = document.getElementById('tabla-salidas-pendientes-cuerpo');
+  const tbodySalidasConfirmadas = document.getElementById('tabla-salidas-confirmadas-cuerpo');
+  const fechaFiltro = document.getElementById('filtro-fecha-salida') ? document.getElementById('filtro-fecha-salida').value : '';
+
+  if (tbodyGeneral) tbodyGeneral.innerHTML = '';
+  if (tbodySalidasPendientes) tbodySalidasPendientes.innerHTML = '';
+  if (tbodySalidasConfirmadas) tbodySalidasConfirmadas.innerHTML = '';
+
+  renderizarTablaClientes();
+
+  Object.keys(embarques).forEach(key => {
+    const item = embarques[key];
+    const semaforo = evaluarSemaforo(item);
+
+    // 1. Embarques: Historial General
+    if (tbodyGeneral) {
+      const trGen = document.createElement('tr');
+      trGen.innerHTML = `
+        <td><b>${item.delivery}</b></td>
+        <td><b>${item.cliente}</b><br><small style="color:#64748b">${item.direccion}</small></td>
+        <td>${item.toneladas} Tn</td>
+        <td>${item.fechaEntrega}</td>
+        <td>${item.horaEntrega} hrs</td>
+        <td><b>${item.horaLimite} hrs</b> (${item.fechaLimite})</td>
+        <td>
+          <span class="semaforo-dot ${semaforo.clase}">
+            <span class="dot"></span> ${semaforo.texto}
+          </span>
+        </td>
+        <td>${item.salidaReal ? item.salidaReal : 'En Patio'}</td>
+        <td>
+          <button class="btn-edit" onclick="editarEnvio('${key}')">✏️ Editar</button>
+          <button class="btn-delete" onclick="eliminarEnvio('${key}')">🗑️ Borrar</button>
+        </td>
+      `;
+      tbodyGeneral.appendChild(trGen);
+    }
+
+    // 2. Almacén: Confirmación de Salida
+    if (!item.salidaReal && tbodySalidasPendientes) {
+      const trPend = document.createElement('tr');
+      const esAnden = item.estado === 'En Andén';
+      trPend.innerHTML = `
+        <td><b>${item.delivery}</b></td>
+        <td><b>${item.cliente}</b><br><small style="color:#64748b">${item.direccion}</small></td>
+        <td>${item.toneladas} Tn</td>
+        <td><b>${item.horaLimite} hrs</b><br><small>${item.fechaLimite}</small></td>
+        <td>
+          <span class="semaforo-dot ${semaforo.clase}">
+            <span class="dot"></span> ${semaforo.texto}
+          </span>
+        </td>
+        <td>
+          <button class="btn-anden" onclick="cambiarEstadoAnden('${key}')">${esAnden ? '↩ Pasar a Pendiente' : '🚚 Pasar a Andén'}</button>
+          <button class="btn-confirmar" onclick="confirmarSalida('${key}')">Confirmar Salida</button>
+        </td>
+      `;
+      tbodySalidasPendientes.appendChild(trPend);
+    }
+
+    // 3. Almacén: Historial de Confirmaciones
+    if (item.salidaReal && tbodySalidasConfirmadas) {
+      if (fechaFiltro && item.fechaSalidaReal !== fechaFiltro) {
+        return;
+      }
+
+      const trConf = document.createElement('tr');
+      trConf.innerHTML = `
+        <td><b>${item.delivery}</b></td>
+        <td><b>${item.cliente}</b></td>
+        <td>${item.direccion}</td>
+        <td>${item.toneladas} Tn</td>
+        <td>${item.fechaEntrega} - ${item.horaEntrega} hrs</td>
+        <td>${item.horaLimite} hrs (${item.fechaLimite})</td>
+        <td>
+          <span class="semaforo-dot ${semaforo.clase}">
+            <span class="dot"></span> ${semaforo.texto}
+          </span>
+        </td>
+        <td><b style="color:#059669">${item.salidaReal}</b></td>
+      `;
+      tbodySalidasConfirmadas.appendChild(trConf);
+    }
+  });
+}
+
+function descargarReporteSalidas() {
+  const fechaFiltro = document.getElementById('filtro-fecha-salida') ? document.getElementById('filtro-fecha-salida').value : '';
+  let confirmadas = Object.values(embarques).filter(e => e.salidaReal);
+
+  if (fechaFiltro) {
+    confirmadas = confirmadas.filter(e => e.fechaSalidaReal === fechaFiltro);
+  }
+
+  if (confirmadas.length === 0) {
+    alert('No hay unidades confirmadas en la fecha seleccionada.');
+    return;
+  }
+
+  let csvContent = '\uFEFF';
+  csvContent += 'Delivery,Cliente,Direccion Destino,Toneladas,Fecha Entrega,Hora Entrega,Salida Limite,Estado,Fecha y Hora Salida Real\n';
+
+  confirmadas.forEach(e => {
+    csvContent += `"${e.delivery}","${e.cliente}","${e.direccion}","${e.toneladas}","${e.fechaEntrega}","${e.horaEntrega}","${e.horaLimite}","Salida Confirmada","${e.salidaReal}"\n`;
+  });
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  const sufijoFecha = fechaFiltro ? `_${fechaFiltro}` : `_${new Date().toISOString().slice(0, 10)}`;
+  link.setAttribute('download', `Salidas_Confirmadas_POSCO${sufijoFecha}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+function logout() {
+  usuarioActual = '';
+  perfilActual = '';
+  localStorage.removeItem('posco_sesion_activa');
+  document.getElementById('login-usuario').value = '';
+  document.getElementById('login-password').value = '';
+  document.getElementById('app-content').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'block';
+}
+
+verificarSesionGuardada();
+setInterval(renderizarTablas, 15000);
+</script>
+</body>
+</html>
